@@ -4,17 +4,6 @@
 #   (可选第 3 个参数指定 bert_model 名/路径, 如
 #       python prediction_bert.py seq.fa out.tsv 'bert-base-uncased'
 #       python prediction_bert.py seq.fa out.tsv /path/to/bert-base-uncased)
-#
-# 修复说明:
-#   * 原版 load_model("../Models/bert.bin") 后 tokenizer 为 None, 因为
-#     BertTokenizer.from_pretrained(bert_model) 在本地/离线环境下找不到 vocab.txt, 返回 None,
-#     于是 predict_proba 报 "NoneType object has no attribute 'tokenize'"。
-#   * 本脚本在加载模型后【主动解析 tokenizer】: 依次尝试
-#       (1) 模型参数里记录的 bert_model
-#       (2) 显式第 3 个参数
-#       (3) 常见本地缓存/目录: Models/bert-base-uncased, Models/bert-base-uncased-vocab.txt,
-#           ~/.cache/torch/pretrained_bert/bert-base-uncased-vocab.txt 等
-#       若仍失败, 打印清晰的解决指引并退出(而非静默出错)。
 
 from os import environ
 from sys import argv
@@ -43,15 +32,13 @@ else:
 
 from bert_sklearn import load_model
 import numpy as np
-import pandas as pd
 
-# ---------- 先读模型(会打印 "Loading model from ../Models/bert.bin...") ----------
+# ---------- 先读模型 ----------
 model = load_model("../Models/bert.bin")
 
 # ---------- tokenizer 解析 ----------
 def resolve_tokenizer(model):
     """尽力让 model.tokenizer 可用; 返回 (tokenizer, 说明)。"""
-    # 模型参数里记录的 bert_model
     recorded = getattr(model, "bert_model", None)
 
     candidates = []
@@ -59,12 +46,12 @@ def resolve_tokenizer(model):
         candidates.append(explicit_bert_model)
     if recorded:
         candidates.append(recorded)
-    # 常见本地名字/路径
     cands_more = [
         "bert-base-uncased",
         "bert-base-cased",
         "bert-base-multilingual-uncased",
         os.path.join("..", "Models", "bert-base-uncased"),
+        os.path.join("Models", "bert-base-uncased"),
         os.path.join("..", "Models", "bert-base-uncased-vocab.txt"),
         os.path.expanduser("~/.cache/torch/pretrained_bert/bert-base-uncased-vocab.txt"),
         os.path.expanduser("~/.cache/torch/pretrained_bert/bert-base-cased-vocab.txt"),
@@ -95,31 +82,38 @@ tok, how = resolve_tokenizer(model)
 if tok is None:
     sys.stderr.write("\n" + "="*78 + "\n")
     sys.stderr.write("[BERT tokenizer 无法解析] 无法加载 BERT 的 vocab.txt, 因此无法打分。\n")
-    sys.stderr.write("  尝试过的候选: " + ", ".join([repr(x) for x in (explicit_bert_model, getattr(model,'bert_model',None))]) + " ...\n")
-    sys.stderr.write("  → 请做以下任一操作:\n")
-    sys.stderr.write("    1) 用能上网的机器下载 BERT vocab.txt 放到 Models/ 下:\n")
-    sys.stderr.write("       https://huggingface.co/bert-base-uncased/resolve/main/vocab.txt\n")
-    sys.stderr.write("       然后放到: ../Models/bert-base-uncased/vocab.txt (或 ../Models/bert-base-uncased-vocab.txt)\n")
-    sys.stderr.write("    2) 或指定模型名/路径作为第 3 个参数:\n")
-    sys.stderr.write("       python prediction_bert.py seq.fa out.tsv '../Models/bert-base-uncased'\n")
-    sys.stderr.write("    3) 若你知道训练时用的 bert_model, 把它作为第 3 个参数传入。\n")
     sys.stderr.write("="*78 + "\n")
     sys.exit(2)
 
-model.tokenizer = tok  # 显式挂上, 供 predict_proba 使用
+model.tokenizer = tok
 print("[BERT] tokenizer 已就绪, 来源: %s" % how)
 
-# ---------- 读序列并格式化 ----------
-tmp = pd.read_csv(seq_path, sep="\t", header=None, names=["seq"], index_col=False).seq.values
-seq_array = []
-for eachseq in tmp:
-    if ">" not in eachseq:
-        # 每个氨基酸字符用空格隔开, 作为 BERT 的 token
-        seq_array.append(" ".join(list(eachseq)))
-seq_array = np.array(seq_array)
+# ---------- 流式读取 FASTA 并分块预测 (低内存占用, 防止 OOM 崩溃) ----------
+chunk_size = int(os.environ.get("BERT_CHUNK_SIZE", "50000"))
+print("[BERT] 开始流式预测 (use_cuda=%s, 分块大小: %d)..." % (USE_CUDA, chunk_size))
 
-print("[BERT] 待预测序列数: %d  use_cuda=%s" % (len(seq_array), USE_CUDA))
-y_prob = model.predict_proba(seq_array, use_cuda=USE_CUDA)
-y_prob = y_prob[:, 1]
-pd.DataFrame(y_prob).to_csv(argv[2], sep="\t", header=False, index=False)
-print("[BERT] 完成 -> %s" % argv[2])
+def stream_fasta_tokens(filepath, chunk_size=50000):
+    seq_chunk = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('>'):
+                continue
+            seq_chunk.append(" ".join(list(line)))
+            if len(seq_chunk) >= chunk_size:
+                yield np.array(seq_chunk)
+                seq_chunk = []
+        if seq_chunk:
+            yield np.array(seq_chunk)
+
+total = 0
+with open(argv[2], 'w') as out_f:
+    for idx, chunk_data in enumerate(stream_fasta_tokens(seq_path, chunk_size)):
+        y_prob = model.predict_proba(chunk_data, use_cuda=USE_CUDA)
+        y_prob = y_prob[:, 1]
+        for p in y_prob:
+            out_f.write("%.8f\n" % p)
+        total += len(y_prob)
+        print("  [BERT 进度] 已预测 %d 条序列" % total, flush=True)
+
+print("[BERT] 完成 -> %s (共 %d 条)" % (argv[2], total))
