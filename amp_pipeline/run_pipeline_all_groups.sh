@@ -91,6 +91,14 @@ for dir in "$GROUPED_DIR"/*/; do
         fi
         count=$((count+1))
         out="$RESULTS_ROOT/$cohort/$base"
+
+        # 断点续跑保护: 若该组已成功跑完, 自动跳过, 绝不重复计算
+        if [ -f "$out/final_prediction.txt" ] && [ -s "$out/final_prediction.txt" ] && \
+           [ -f "$out/attention_proba.tsv" ] && [ -f "$out/lstm_proba.tsv" ] && [ -f "$out/bert_proba.tsv" ]; then
+            echo "  [✓ 已完成, 自动跳过] $cohort / $base (已存在完整预测结果)"
+            continue
+        fi
+
         echo ""
         echo "########## 处理 $fa ##########"
         bash "$SCRIPT_DIR/run_pipeline_one.sh" \
