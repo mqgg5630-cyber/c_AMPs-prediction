@@ -24,6 +24,12 @@ import os, sys, glob
 environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 USE_CUDA = os.environ.get("BERT_USE_CUDA", "0").lower() in ("1", "true", "yes")
 
+# CPU 多核线程数优化 (例如在 HPC 64/96 核上加速)
+import torch
+omp_threads = os.environ.get("OMP_NUM_THREADS", "")
+if omp_threads and omp_threads.isdigit():
+    torch.set_num_threads(int(omp_threads))
+
 seq_path = argv[1]
 if len(argv) > 3:
     explicit_bert_model = argv[3]

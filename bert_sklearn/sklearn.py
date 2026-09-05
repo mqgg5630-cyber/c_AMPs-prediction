@@ -368,11 +368,13 @@ class BaseBertEstimator(BaseEstimator):
                                       self.max_seq_length,
                                       self.tokenizer)
 
-        # num_workers: 默认 5; 用环境变量 BERT_NUM_WORKERS 控制。
+        # batch_size: 优先读取环境变量 BERT_EVAL_BATCH_SIZE (如 128/256), 极大提升 CPU/GPU 推理吞吐
+        bs = int(os.environ.get("BERT_EVAL_BATCH_SIZE", str(self.eval_batch_size)))
+        # num_workers: 默认 0; 用环境变量 BERT_NUM_WORKERS 控制。
         # 设为 0 可避免 DataLoader worker 子进程里 tokenizer 为 None 导致的崩溃。
         nw = int(os.environ.get("BERT_NUM_WORKERS", "0"))
         dataloader = torch.utils.data.DataLoader(dataset,
-                                                 self.eval_batch_size,
+                                                 bs,
                                                  num_workers=nw)
         self.model.to(device)
         self.model.eval()
