@@ -196,9 +196,13 @@ def main():
     print(f"结果目录   : {root}")
     print(f"单模型阈值 : {args.threshold}")
 
-    # 找到所有含 input.fa 的分组目录
-    group_dirs = sorted(glob.glob(os.path.join(root, "*", "*")))
-    group_dirs = [d for d in group_dirs if os.path.isfile(os.path.join(d, "input.fa"))]
+    # 找到所有含 input.fa 的分组目录 (兼容单目录 / 一级子目录 / 二级队列子目录)
+    candidates = [root] + sorted(glob.glob(os.path.join(root, "*"))) + sorted(glob.glob(os.path.join(root, "*", "*")))
+    group_dirs = []
+    for d in candidates:
+        if os.path.isdir(d) and os.path.isfile(os.path.join(d, "input.fa")):
+            if d not in group_dirs:
+                group_dirs.append(d)
 
     print("\n[单组明细汇总]")
     summaries = []
