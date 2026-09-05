@@ -20,15 +20,20 @@ from os import environ
 from sys import argv
 import os, sys, glob
 
-# 可控开关: -1=自动, 否则固定用 CPU/GPU
-environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
-USE_CUDA = os.environ.get("BERT_USE_CUDA", "0").lower() in ("1", "true", "yes")
-
 # CPU 多核线程数优化 (例如在 HPC 64/96 核上加速)
 import torch
 omp_threads = os.environ.get("OMP_NUM_THREADS", "")
 if omp_threads and omp_threads.isdigit():
     torch.set_num_threads(int(omp_threads))
+
+# 可控开关: auto=自动检测 GPU, 1/true=强制 GPU, 0/false=强制 CPU
+raw_cuda = os.environ.get("BERT_USE_CUDA", "auto").strip().lower()
+if raw_cuda in ("1", "true", "yes"):
+    USE_CUDA = True
+elif raw_cuda in ("0", "false", "no"):
+    USE_CUDA = False
+else:
+    USE_CUDA = torch.cuda.is_available()
 
 seq_path = argv[1]
 if len(argv) > 3:

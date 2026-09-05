@@ -25,9 +25,10 @@ PROJECT_DIR="${3:-$(dirname "$SCRIPT_DIR")}"                 # script/ 上一级
 ENV_TF="${4:-/home/w26/miniconda3/envs/camps-tf114}"
 ENV_BERT="${5:-/home/w26/miniconda3/envs/py36}"
 
-# BERT 运行时环境: 离线/无GPU用CPU + 单进程(避免 DataLoader worker 崩溃)
+# BERT 运行时环境: 默认 auto 探测 GPU (有 CUDA 自动开启), 支持大批次加速
 export BERT_NUM_WORKERS="${BERT_NUM_WORKERS:-0}"
-export BERT_USE_CUDA="${BERT_USE_CUDA:-0}"
+export BERT_USE_CUDA="${BERT_USE_CUDA:-auto}"
+export BERT_EVAL_BATCH_SIZE="${BERT_EVAL_BATCH_SIZE:-128}"
 
 if [ -z "$INPUT_FA" ] || [ -z "$OUTPUT_DIR" ]; then
     echo "用法: bash run_pipeline_one.sh <input.fa> <output_dir> [project_dir] [env_tf] [env_bert]"
