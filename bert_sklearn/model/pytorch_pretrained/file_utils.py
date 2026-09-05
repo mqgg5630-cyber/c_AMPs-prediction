@@ -174,7 +174,7 @@ def s3_get(url, temp_file):
 
 
 def http_get(url, temp_file):
-    req = requests.get(url, stream=True)
+    req = requests.get(url, stream=True, timeout=3)
     content_length = req.headers.get('Content-Length')
     total = int(content_length) if content_length is not None else None
     progress = tqdm(unit="B", total=total)
@@ -203,12 +203,12 @@ def get_from_cache(url, cache_dir=None):
         etag = s3_etag(url)
     else:
         try:
-            response = requests.head(url, allow_redirects=True)
+            response = requests.head(url, allow_redirects=True, timeout=3)
             if response.status_code != 200:
                 etag = None
             else:
                 etag = response.headers.get("ETag")
-        except EnvironmentError:
+        except Exception:
             etag = None
 
     if sys.version_info[0] == 2 and etag is not None:

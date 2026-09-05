@@ -432,6 +432,19 @@ class BaseBertEstimator(BaseEstimator):
         params = state['params']
 
         bert_model = params['bert_model']
+        # 优先使用本地 Models/bert-base-uncased 目录 (避免向 s3.amazonaws.com 请求导致 2 分钟超时卡顿)
+        local_cands = [
+            os.path.join(os.path.dirname(restore_file), "bert-base-uncased"),
+            os.path.join("..", "Models", "bert-base-uncased"),
+            os.path.join("Models", "bert-base-uncased"),
+            os.path.expanduser("~/.cache/torch/pretrained_bert"),
+            os.path.expanduser("~/.pytorch_pretrained_bert"),
+        ]
+        for lc in local_cands:
+            if os.path.isdir(lc) and os.path.isfile(os.path.join(lc, "vocab.txt")):
+                bert_model = lc
+                break
+
         num_mlp_layers = params['num_mlp_layers']
         num_mlp_hiddens = params['num_mlp_hiddens']
 
