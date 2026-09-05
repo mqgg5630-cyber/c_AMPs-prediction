@@ -17,7 +17,7 @@
 # ==============================================================================
 #SBATCH -J amp_predict
 #SBATCH -p fat1
-#SBATCH -c 64
+#SBATCH -c 96
 #SBATCH --mem=500G
 #SBATCH -t 7-00:00:00
 #SBATCH -o amp_pred_%j.out
