@@ -89,10 +89,10 @@ model.tokenizer = tok
 print("[BERT] tokenizer 已就绪, 来源: %s" % how)
 
 # ---------- 流式读取 FASTA 并分块预测 (低内存占用, 防止 OOM 崩溃) ----------
-chunk_size = int(os.environ.get("BERT_CHUNK_SIZE", "50000"))
+chunk_size = int(os.environ.get("BERT_CHUNK_SIZE", "10000"))
 print("[BERT] 开始流式预测 (use_cuda=%s, 分块大小: %d)..." % (USE_CUDA, chunk_size))
 
-def stream_fasta_tokens(filepath, chunk_size=50000):
+def stream_fasta_tokens(filepath, chunk_size=10000):
     seq_chunk = []
     with open(filepath, 'r') as f:
         for line in f:

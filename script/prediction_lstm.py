@@ -18,12 +18,13 @@ model = load_model('../Models/lstm.h5')
 
 input_file = sys.argv[1]
 output_file = sys.argv[2]
-batch_size = int(os.environ.get("TF_PREDICT_BATCH_SIZE", "4096"))
-chunksize = int(os.environ.get("TF_CHUNK_SIZE", "100000"))
+# 适配 4GB 显存显卡 (GTX 1650): 默认 chunk 20000, batch 1024, 显存占用 < 400MB
+batch_size = int(os.environ.get("TF_PREDICT_BATCH_SIZE", "1024"))
+chunksize = int(os.environ.get("TF_CHUNK_SIZE", "20000"))
 
 print("[LSTM] 正在流式预测 (分块大小: %d, Batch: %d)..." % (chunksize, batch_size))
 
-def stream_matrix(filepath, chunk_size=100000):
+def stream_matrix(filepath, chunk_size=20000):
     chunk = []
     with open(filepath, 'r') as f:
         reader = csv.reader(f)
@@ -44,7 +45,7 @@ with open(output_file, 'w') as out_f:
         for p in preds:
             out_f.write("%.8f\n" % p)
         total += len(preds)
-        if (idx + 1) % 10 == 0 or len(preds) < chunksize:
+        if (idx + 1) % 5 == 0 or len(preds) < chunksize:
             print("  [LSTM 进度] 已预测 %d 条序列" % total, flush=True)
 
 print("[LSTM] 完成 -> %s (共 %d 条)" % (output_file, total))
