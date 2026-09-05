@@ -30,7 +30,36 @@ MAG_SAMPLE="/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad/codenew/sorf_pipeline/MA
 META="/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad/codenew/sorf_pipeline/Sample_Group_Mapping.tsv"
 CATALOG="/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad/sorf_output/final_sORF_Catalog.unique.fa"
 OUTDIR="/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad/comparable_sorf_grouped_catalog"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # 脚本所在目录 (amp_pipeline)
+# 自动定位 build_grouped_sorf_from_magfiles.py 路径 (兼容 sbatch 的 spool 临时目录与常规 bash 运行)
+SCRIPT_NAME="build_grouped_sorf_from_magfiles.py"
+PY_SCRIPT=""
+
+# 依次检查可能的目录
+CANDIDATE_DIRS=(
+    "${SLURM_SUBMIT_DIR:-}"
+    "${SLURM_SUBMIT_DIR:-}/amp_pipeline"
+    "$(pwd)"
+    "$(pwd)/amp_pipeline"
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd 2>/dev/null)/amp_pipeline"
+    "/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad/c_AMPs-prediction/amp_pipeline"
+    "/mnt/hpc/home/25menglei/25wenshaohua/c_AMPs-prediction/amp_pipeline"
+    "/mnt/hpc/home/25menglei/25wenshaohua/c_AMPs-prediction"
+)
+
+for dir in "${CANDIDATE_DIRS[@]}"; do
+    if [ -n "$dir" ] && [ -f "$dir/$SCRIPT_NAME" ]; then
+        PY_SCRIPT="$dir/$SCRIPT_NAME"
+        break
+    fi
+done
+
+if [ -z "$PY_SCRIPT" ] || [ ! -f "$PY_SCRIPT" ]; then
+    echo "错误: 找不到 $SCRIPT_NAME !"
+    echo "当前目录: $(pwd)"
+    echo "SLURM_SUBMIT_DIR: ${SLURM_SUBMIT_DIR:-未设置}"
+    exit 1
+fi
 
 # GPU 不需要, 但保留探测避免 CUDA 相关提示
 export CUDA_VISIBLE_DEVICES=""
@@ -39,18 +68,15 @@ echo "=================================================="
 echo " sorf 四队列分组 (SLURM) 开始 @ $(date '+%F %T')"
 echo "=================================================="
 echo " 节点     : $(hostname)"
-echo " CPU 数   : $SLURM_CPUS_PER_TASK / $SLURM_CPUS_ON_NODE"
-echo " 内存     : ${SLURM_MEM_PER_NODE}MB"
+echo " CPU 数   : ${SLURM_CPUS_PER_TASK:-1} / ${SLURM_CPUS_ON_NODE:-1}"
+echo " 内存     : ${SLURM_MEM_PER_NODE:-未知}MB"
+echo " 脚本路径 : $PY_SCRIPT"
 echo " sorf-dir : $SORF_DIR"
 echo " 输出     : $OUTDIR"
 echo "=================================================="
 
-# 可以先跑一次 dry-run 做快速自检 (不写文件); 若之前已确认匹配正常可注释掉
-# python3 "$SCRIPT_DIR/build_grouped_sorf_from_magfiles.py" \
-#     --sorf-dir "$SORF_DIR" --mag-sample "$MAG_SAMPLE" --meta "$META" --dry-run
-
 # 正式跑
-python3 "$SCRIPT_DIR/build_grouped_sorf_from_magfiles.py" \
+python3 "$PY_SCRIPT" \
     --sorf-dir    "$SORF_DIR" \
     --mag-sample  "$MAG_SAMPLE" \
     --meta        "$META" \

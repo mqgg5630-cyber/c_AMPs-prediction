@@ -448,7 +448,7 @@ def main():
             # 进度
             if (idx + 1) % max(1, n_files // 10) == 0 or (idx + 1) == n_files:
                 el = time.time() - t0
-                print(f"    [进度] {cid} 已处理 MAG {idx+1}/{n_files}  (用时 {el:.0f}s, 当前该组已写 {cnt[k]:,})", flush=True)
+                print(f"    [进度] {cid} 已处理 MAG {idx+1}/{n_files}  (用时 {el:.0f}s, 该 cohort 当前已写 {sum(cnt.values()):,})", flush=True)
         for h in handles.values():
             h.close()
         count.update(cnt)
