@@ -54,10 +54,25 @@ for dir in "${CANDIDATE_DIRS[@]}"; do
     fi
 done
 
+# 最后手段: 在提交目录等常见位置浅层搜索 (避开 sorf_output 大目录)
+if [ -z "$PY_SCRIPT" ]; then
+    for base in "${SLURM_SUBMIT_DIR:-}" "$(pwd)" \
+                "/mnt/hpc/home/25menglei/25wenshaohua/wsh/ad" "$HOME"; do
+        [ -d "$base" ] || continue
+        hit="$(find "$base" -maxdepth 3 -name "$SCRIPT_NAME" \
+                -not -path '*/.git/*' -not -path '*/sorf_output/*' 2>/dev/null | head -n 1)"
+        if [ -n "$hit" ]; then
+            PY_SCRIPT="$hit"
+            break
+        fi
+    done
+fi
+
 if [ -z "$PY_SCRIPT" ] || [ ! -f "$PY_SCRIPT" ]; then
     echo "错误: 找不到 $SCRIPT_NAME !"
     echo "当前目录: $(pwd)"
     echo "SLURM_SUBMIT_DIR: ${SLURM_SUBMIT_DIR:-未设置}"
+    echo "请把 build_grouped_sorf_from_magfiles.py 放到提交目录(或其 amp_pipeline/ 子目录)后重新 sbatch。"
     exit 1
 fi
 
@@ -74,6 +89,27 @@ echo " 脚本路径 : $PY_SCRIPT"
 echo " sorf-dir : $SORF_DIR"
 echo " 输出     : $OUTDIR"
 echo "=================================================="
+
+# ----- 输入路径预检: 缺一个立刻报错退出, 避免空跑 / 悄悄产出空结果 -----
+echo "[预检] 检查输入路径 ..."
+MISSING=0
+if [ ! -d "$SORF_DIR" ]; then
+    echo "  ✗ sorf-dir 目录不存在: $SORF_DIR"; MISSING=1
+fi
+if [ ! -f "$MAG_SAMPLE" ]; then
+    echo "  ✗ MAG_Sample_Mapping.tsv 不存在: $MAG_SAMPLE"; MISSING=1
+fi
+if [ ! -f "$META" ]; then
+    echo "  ✗ Sample_Group_Mapping.tsv 不存在: $META"; MISSING=1
+fi
+if [ ! -f "$CATALOG" ]; then
+    echo "  ✗ catalog 文件不存在: $CATALOG"; MISSING=1
+fi
+if [ "$MISSING" = "1" ]; then
+    echo "[预检失败] 请修正脚本头部对应变量后重新 sbatch。"
+    exit 1
+fi
+echo "  ✓ 输入全部就绪, 开始运行"
 
 # 正式跑
 python3 "$PY_SCRIPT" \
