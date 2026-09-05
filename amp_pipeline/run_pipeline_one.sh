@@ -108,31 +108,48 @@ echo "  Models      : $(ls -1 "$PROJECT_DIR/Models/" 2>/dev/null | tr '\n' ' ')"
 echo "=================================================="
 echo "[1/5] 预处理输入序列 (format.pl) ..."
 echo "=================================================="
-perl "$FORMAT_PL" "$INPUT_ABS" none > "$OUTPUT_ABS/input_formatted_300.txt"
-FORMAT_COUNT=$(wc -l < "$OUTPUT_ABS/input_formatted_300.txt")
-echo "format 后行数: $FORMAT_COUNT"
+if [ -f "$OUTPUT_ABS/input_formatted_300.txt" ] && [ -s "$OUTPUT_ABS/input_formatted_300.txt" ]; then
+    FORMAT_COUNT=$(wc -l < "$OUTPUT_ABS/input_formatted_300.txt")
+    echo "  [断点续跑] 特征矩阵已存在 (共 $FORMAT_COUNT 行), 跳过 format.pl 耗时步骤"
+else
+    perl "$FORMAT_PL" "$INPUT_ABS" none > "$OUTPUT_ABS/input_formatted_300.txt"
+    FORMAT_COUNT=$(wc -l < "$OUTPUT_ABS/input_formatted_300.txt")
+    echo "format 后行数: $FORMAT_COUNT"
+fi
 
 echo "=================================================="
 echo "[2/5] Attention 模型预测 (camps-tf114) ..."
 echo "=================================================="
 cd "$PROJECT_DIR/script"
-"$ENV_TF/bin/python" prediction_attention.py \
-    "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/attention_proba.tsv"
-echo "Attention 完成 -> $OUTPUT_ABS/attention_proba.tsv ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条)"
+if [ -f "$OUTPUT_ABS/attention_proba.tsv" ] && [ -s "$OUTPUT_ABS/attention_proba.tsv" ]; then
+    echo "  [断点续跑] Attention 结果已存在 ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条), 跳过预测"
+else
+    "$ENV_TF/bin/python" prediction_attention.py \
+        "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/attention_proba.tsv"
+    echo "Attention 完成 -> $OUTPUT_ABS/attention_proba.tsv ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条)"
+fi
 
 echo "=================================================="
 echo "[3/5] LSTM 模型预测 (camps-tf114) ..."
 echo "=================================================="
-"$ENV_TF/bin/python" prediction_lstm.py \
-    "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/lstm_proba.tsv"
-echo "LSTM 完成 -> $OUTPUT_ABS/lstm_proba.tsv ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条)"
+if [ -f "$OUTPUT_ABS/lstm_proba.tsv" ] && [ -s "$OUTPUT_ABS/lstm_proba.tsv" ]; then
+    echo "  [断点续跑] LSTM 结果已存在 ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条), 跳过预测"
+else
+    "$ENV_TF/bin/python" prediction_lstm.py \
+        "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/lstm_proba.tsv"
+    echo "LSTM 完成 -> $OUTPUT_ABS/lstm_proba.tsv ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条)"
+fi
 
 echo "=================================================="
 echo "[4/5] BERT 模型预测 (py36) ..."
 echo "=================================================="
-"$ENV_BERT/bin/python" prediction_bert.py \
-    "$INPUT_ABS" "$OUTPUT_ABS/bert_proba.tsv"
-echo "BERT 完成 -> $OUTPUT_ABS/bert_proba.tsv ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条)"
+if [ -f "$OUTPUT_ABS/bert_proba.tsv" ] && [ -s "$OUTPUT_ABS/bert_proba.tsv" ]; then
+    echo "  [断点续跑] BERT 结果已存在 ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条), 跳过预测"
+else
+    "$ENV_BERT/bin/python" prediction_bert.py \
+        "$INPUT_ABS" "$OUTPUT_ABS/bert_proba.tsv"
+    echo "BERT 完成 -> $OUTPUT_ABS/bert_proba.tsv ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条)"
+fi
 
 echo "=================================================="
 echo "[5/5] 三模型投票生成最终预测 (result.pl) ..."
