@@ -102,3 +102,27 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ===== c_AMPs-prediction 本地运行产物 (不进 git) =====
+# BERT 模型体积大, 按 Models/ReadME.txt 单独下载, 不入库 (att.h5/lstm.h5 为已入库模型)
+Models/bert.bin
+# 运行输入/输出与中间目录
+test_run/
+test_output/
+amp_results/
+sorf_grouped_catalog/
+sorf_output/
+work/
+output/
+run_output/
+# 产物类文件
+*.log
+*.log.*
+aggregated_results.tsv
+amp_summary.tsv
+amp_all_peptides.tsv
+final_prediction.txt
+attention_proba.tsv
+lstm_proba.tsv
+bert_proba.tsv
+input_formatted_300.txt
