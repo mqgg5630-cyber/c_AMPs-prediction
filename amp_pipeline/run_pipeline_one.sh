@@ -121,9 +121,17 @@ echo "=================================================="
 echo "[2/5] Attention 模型预测 (camps-tf114) ..."
 echo "=================================================="
 cd "$PROJECT_DIR/script"
+RUN_ATT=1
 if [ -f "$OUTPUT_ABS/attention_proba.tsv" ] && [ -s "$OUTPUT_ABS/attention_proba.tsv" ]; then
-    echo "  [断点续跑] Attention 结果已存在 ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条), 跳过预测"
-else
+    ATT_CT=$(wc -l < "$OUTPUT_ABS/attention_proba.tsv")
+    if [ "$ATT_CT" -ge "$FORMAT_COUNT" ]; then
+        echo "  [断点续跑] Attention 完整结果已存在 ($ATT_CT 条), 跳过预测"
+        RUN_ATT=0
+    else
+        echo "  [断点续跑] Attention 结果不完整 (当前 $ATT_CT / 期望 $FORMAT_COUNT 行), 重新完整预测"
+    fi
+fi
+if [ "$RUN_ATT" -eq 1 ]; then
     "$ENV_TF/bin/python" prediction_attention.py \
         "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/attention_proba.tsv"
     echo "Attention 完成 -> $OUTPUT_ABS/attention_proba.tsv ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条)"
@@ -132,9 +140,17 @@ fi
 echo "=================================================="
 echo "[3/5] LSTM 模型预测 (camps-tf114) ..."
 echo "=================================================="
+RUN_LSTM=1
 if [ -f "$OUTPUT_ABS/lstm_proba.tsv" ] && [ -s "$OUTPUT_ABS/lstm_proba.tsv" ]; then
-    echo "  [断点续跑] LSTM 结果已存在 ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条), 跳过预测"
-else
+    LSTM_CT=$(wc -l < "$OUTPUT_ABS/lstm_proba.tsv")
+    if [ "$LSTM_CT" -ge "$FORMAT_COUNT" ]; then
+        echo "  [断点续跑] LSTM 完整结果已存在 ($LSTM_CT 条), 跳过预测"
+        RUN_LSTM=0
+    else
+        echo "  [断点续跑] LSTM 结果不完整 (当前 $LSTM_CT / 期望 $FORMAT_COUNT 行), 重新完整预测"
+    fi
+fi
+if [ "$RUN_LSTM" -eq 1 ]; then
     "$ENV_TF/bin/python" prediction_lstm.py \
         "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/lstm_proba.tsv"
     echo "LSTM 完成 -> $OUTPUT_ABS/lstm_proba.tsv ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条)"
@@ -143,9 +159,17 @@ fi
 echo "=================================================="
 echo "[4/5] BERT 模型预测 (py36) ..."
 echo "=================================================="
+RUN_BERT=1
 if [ -f "$OUTPUT_ABS/bert_proba.tsv" ] && [ -s "$OUTPUT_ABS/bert_proba.tsv" ]; then
-    echo "  [断点续跑] BERT 结果已存在 ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条), 跳过预测"
-else
+    BERT_CT=$(wc -l < "$OUTPUT_ABS/bert_proba.tsv")
+    if [ "$BERT_CT" -ge "$SEQ_COUNT" ] || [ "$BERT_CT" -ge "$FORMAT_COUNT" ]; then
+        echo "  [断点续跑] BERT 完整结果已存在 ($BERT_CT 条), 跳过预测"
+        RUN_BERT=0
+    else
+        echo "  [断点续跑] BERT 结果不完整 (当前 $BERT_CT / 期望 $SEQ_COUNT 行), 重新完整预测"
+    fi
+fi
+if [ "$RUN_BERT" -eq 1 ]; then
     "$ENV_BERT/bin/python" prediction_bert.py \
         "$INPUT_ABS" "$OUTPUT_ABS/bert_proba.tsv"
     echo "BERT 完成 -> $OUTPUT_ABS/bert_proba.tsv ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条)"
