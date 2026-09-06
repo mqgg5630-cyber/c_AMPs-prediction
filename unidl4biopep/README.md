@@ -7,6 +7,7 @@
 | 文件 | 用途 |
 | :--- | :--- |
 | `extract_multiact_hits.py` | 提取 **22 种活性概率全部 > 阈值**（默认 0.8）的肽段，输出 FASTA + 数量统计表 |
+| `extract_single_activity_hits.py` | 牙周炎组中，分别提取每个模型自身 **prob > 阈值** 的肽段，输出 22 个 FASTA + 统计表 |
 
 ## 用法
 
@@ -30,6 +31,38 @@ python3 extract_multiact_hits.py <results_dir> \
 
 # 大 CSV 建议使用分块读取（默认每次 100000 行），内存较小时可调小
 python3 extract_multiact_hits.py <results_dir> --chunksize 50000
+```
+
+## 牙周炎组：22 个模型分别提取
+
+下面的脚本不是要求 22 个模型同时超过阈值，而是分别处理每个模型；默认只处理
+`Periodontitis_Specific`，每个模型生成一个 FASTA 和一个命中明细 CSV：
+
+```bash
+python3 extract_single_activity_hits.py \
+    /home/wsh/UniDL4BioPep-main/Predictions_Results_With_Probability_20260604_204744
+```
+
+默认规则是每个模型自己的 `prob > 0.8`。输出目录为：
+
+```text
+<results_dir>/Periodontitis_Specific_SingleActivity_gt0.8/
+├── fasta/                       # 22 个模型各一个 FASTA
+├── csv/                         # 22 个模型各一个命中明细 CSV
+├── single_activity_summary.csv  # 22 个模型总数量
+└── per_batch_counts.csv         # 每个 batch、每个模型数量
+```
+
+默认保留每条满足条件的输入记录；如果希望每个模型按 sequence 去重：
+
+```bash
+python3 extract_single_activity_hits.py <results_dir> --dedup
+```
+
+内存较小时可调小分块大小：
+
+```bash
+python3 extract_single_activity_hits.py <results_dir> --chunksize 50000
 ```
 
 ## 输入 / 输出
