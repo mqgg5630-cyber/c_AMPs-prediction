@@ -27,6 +27,9 @@ python3 extract_multiact_hits.py <results_dir> --inclusive
 # 只跑某个数据集 / 输出到别处 / 不去重
 python3 extract_multiact_hits.py <results_dir> \
     --datasets Healthy_Specific --outdir /path/to/out --no-dedup
+
+# 大 CSV 建议使用分块读取（默认每次 100000 行），内存较小时可调小
+python3 extract_multiact_hits.py <results_dir> --chunksize 50000
 ```
 
 ## 输入 / 输出

@@ -92,6 +92,8 @@ def parse_args():
                     help="只处理指定的数据集子目录 (如 Healthy_Specific)")
     ap.add_argument("--no-dedup", action="store_true",
                     help="合并 FASTA 时不按序列去重 (默认去重, 保留 min_prob 最高的一条)")
+    ap.add_argument("--chunksize", type=int, default=100_000,
+                    help="每次读取的 CSV 行数, 用于降低内存占用 (默认 100000)")
     return ap.parse_args()
 
 
@@ -130,16 +132,35 @@ def find_dataset_dirs(results_dir, only=None):
     return dirs
 
 
-def load_batch(path):
-    """读取一个 batch 的预测 CSV, 返回 (df, prob_cols)"""
-    df = pd.read_csv(path, keep_default_na=False, low_memory=False)
-    if "sequence" not in df.columns:
+def load_batch(path, chunksize):
+    """检查列名并以分块方式读取一个 batch。
+
+    只读取 sequence、ID 和 prob 列，不把 class/filtered 等无关列载入内存。
+    这样可以处理几十万行的大 CSV，避免一次性读入整个文件。
+    返回 (chunk_iterator, prob_cols, id_col)。
+    """
+    header = pd.read_csv(path, nrows=0)
+    if "sequence" not in header.columns:
         raise ValueError(
-            f"缺少 sequence 列: {path}\n实际列: {list(df.columns)[:10]} ...")
-    prob_cols = [c for c in df.columns if str(c).endswith("_prob")]
-    for c in prob_cols:
-        df[c] = pd.to_numeric(df[c], errors="coerce")   # 非数字 -> NaN, NaN 不算命中
-    return df, prob_cols
+            f"缺少 sequence 列: {path}\n实际列: {list(header.columns)[:10]} ...")
+
+    prob_cols = [c for c in header.columns if str(c).endswith("_prob")]
+    id_col = pick_id_col(header)
+
+    # usecols 去掉预测结果中不参与筛选的 class/filtered 等列，显著降低内存占用。
+    usecols = ["sequence"]
+    if id_col is not None and id_col not in usecols:
+        usecols.append(id_col)
+    usecols.extend(c for c in prob_cols if c not in usecols)
+
+    reader = pd.read_csv(
+        path,
+        usecols=usecols,
+        chunksize=chunksize,
+        keep_default_na=False,
+        low_memory=False,
+    )
+    return reader, prob_cols, id_col
 
 
 def write_fasta(path, records, comment):
@@ -158,6 +179,9 @@ def write_fasta(path, records, comment):
 
 def main():
     args = parse_args()
+
+    if args.chunksize <= 0:
+        sys.exit("❌ --chunksize 必须是大于 0 的整数")
 
     results_dir = os.path.abspath(args.results_dir)
     if not os.path.isdir(results_dir):
@@ -195,16 +219,66 @@ def main():
             fpath = os.path.join(results_dir, ds_name, fname)
             stem = fname[:-len("_Predictions.csv")]
             try:
-                df, prob_cols = load_batch(fpath)
+                reader, prob_cols, id_col = load_batch(fpath, args.chunksize)
             except Exception as e:
                 print(f"  ⚠️ {fname} 读取失败, 跳过: {e}")
                 summary_rows.append([ds_name, stem, 0, 0, 0, "READ_ERROR"])
                 continue
 
-            n_in = len(df)
-            ds_input_total += n_in
-            id_col = pick_id_col(df)
             incomplete = len(prob_cols) < args.require_cols
+            n_in = 0
+            n_hits = 0
+            activity_counts = {c: 0 for c in prob_cols}
+            batch_records = []
+            ds_hits_before = len(ds_hits)
+
+            try:
+                for df in reader:
+                    n_in += len(df)
+                    for c in prob_cols:
+                        # 非数字 -> NaN, NaN 不算命中
+                        df[c] = pd.to_numeric(df[c], errors="coerce")
+
+                    # prob 列不足时仍完整读完，用于准确统计 input_n。
+                    if incomplete:
+                        continue
+
+                    # ---------------- 每活性命中数 ----------------
+                    for c in prob_cols:
+                        activity_counts[c] += int(
+                            (df[c] >= th).sum() if args.inclusive
+                            else (df[c] > th).sum())
+
+                    # ---------------- 22 个 prob 全部超阈值 ----------------
+                    cmp_df = ((df[prob_cols] >= th) if args.inclusive
+                              else (df[prob_cols] > th))
+                    mask = cmp_df.all(axis=1)
+                    n_hits += int(mask.sum())
+                    min_prob = df[prob_cols].min(axis=1)
+
+                    # 只遍历命中行，避免保存整个 batch。
+                    for idx, row in df.loc[mask].iterrows():
+                        seq = clean_seq(row["sequence"])
+                        if not seq:
+                            continue
+                        if id_col is not None:
+                            pid = str(row[id_col]).strip() or f"row{idx}"
+                        else:
+                            pid = f"{ds_name}_{stem}_row{idx}"
+                        mp = float(min_prob.loc[idx])
+                        hdr = (f"{pid} | dataset={ds_name} batch={stem} "
+                               f"min_prob={mp:.4f}")
+                        ds_hits.append((seq, mp, hdr, stem))
+                        batch_records.append((hdr, seq))
+            except Exception as e:
+                # 读取中途出错时，不把该 batch 已读到的部分当作完整结果。
+                del ds_hits[ds_hits_before:]
+                print(f"  ⚠️ {fname} 读取失败, 跳过: {e}")
+                summary_rows.append(
+                    [ds_name, stem, n_in, len(prob_cols), 0, "READ_ERROR"])
+                continue
+
+            ds_input_total += n_in
 
             if incomplete:
                 print(f"  ⚠️ {stem}: 只有 {len(prob_cols)} 个 prob 列 "
@@ -213,18 +287,11 @@ def main():
                     [ds_name, stem, n_in, len(prob_cols), 0, "INCOMPLETE"])
                 continue
 
-            # ---------------- 每活性命中数 ----------------
             for c in prob_cols:
                 act = str(c)[:-len("_prob")]
-                n_act = int((df[c] >= th).sum() if args.inclusive
-                            else (df[c] > th).sum())
-                activity_rows.append([ds_name, act, n_in, n_act])
+                activity_rows.append(
+                    [ds_name, act, n_in, activity_counts[c]])
 
-            # ---------------- 22 个 prob 全部超阈值 ----------------
-            cmp_df = (df[prob_cols] >= th) if args.inclusive else (df[prob_cols] > th)
-            mask = cmp_df.all(axis=1)
-            min_prob = df[prob_cols].min(axis=1)
-            n_hits = int(mask.sum())
             print(f"  ✅ {stem}: {n_in} 条序列, 22 个 prob 全部 {op} {th} "
                   f"的有 {n_hits} 条")
             summary_rows.append(
@@ -232,22 +299,6 @@ def main():
 
             if n_hits == 0:
                 continue
-
-            # ---------------- 记录命中 + per-batch FASTA ----------------
-            batch_records = []
-            for idx, row in df[mask].iterrows():
-                seq = clean_seq(row["sequence"])
-                if not seq:
-                    continue
-                if id_col is not None:
-                    pid = str(row[id_col]).strip() or f"row{idx}"
-                else:
-                    pid = f"{ds_name}_{stem}_row{idx}"
-                mp = float(min_prob[idx])
-                hdr = (f"{pid} | dataset={ds_name} batch={stem} "
-                       f"min_prob={mp:.4f}")
-                ds_hits.append((seq, mp, hdr, stem))
-                batch_records.append((hdr, seq))
 
             batch_fasta = os.path.join(
                 outdir, "per_batch", ds_name, f"{stem}_{tag}.fasta")
