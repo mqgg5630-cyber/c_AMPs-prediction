@@ -54,7 +54,8 @@ echo " 项目目录   : $PROJECT_DIR"
 echo " 安装范围   : $WHAT"
 echo "=================================================="
 
-env_exists() { conda env list | awk '{print $1}' | grep -qx "$1"; }
+# 判定"环境可用": 目录存在且 bin/python 可执行 (上次下载中断会留下无 python 的残缺目录)
+env_exists() { [ -x "$CONDA_BASE/envs/$1/bin/python" ]; }
 
 # ---------- 大包预下载 (断点续传 + 多镜像重试) ----------
 # 国内镜像对 >100MB 的包经常中途断线 (SSL unexpected eof), mamba 不会续传, 直接失败。
@@ -98,14 +99,18 @@ retry() {  # retry <n> <cmd...>
 }
 
 maybe_remove() {
+    local d="$CONDA_BASE/envs/$1"
     if env_exists "$1"; then
         if [ "${FORCE:-0}" = "1" ]; then
             echo " [FORCE] 删除已存在环境 $1 ..."
-            conda env remove -n "$1" -y
+            conda env remove -n "$1" -y || rm -rf "$d"
         else
-            echo " [跳过创建] 环境 $1 已存在 (加 FORCE=1 可重建), 继续检查依赖 ..."
+            echo " [跳过创建] 环境 $1 已存在且完整 (加 FORCE=1 可重建), 继续检查依赖 ..."
             return 1
         fi
+    elif [ -d "$d" ]; then
+        echo " [清理] 发现残缺环境目录 (无 bin/python, 上次安装中断所致): $d -> 删除后重建"
+        rm -rf "$d"
     fi
     return 0
 }
@@ -126,16 +131,16 @@ install_tf() {
             tensorflow-gpu=1.14.0 cudatoolkit=10.0.130 "cudnn=7.6.5" \
             numpy=1.16 "h5py<3" -c defaults
     fi
-    conda activate "$ENV_TF_NAME"
+    PY_TF="$CONDA_BASE/envs/$ENV_TF_NAME/bin/python"
+    [ -x "$PY_TF" ] || { echo "[错误] 环境创建失败, 未找到 $PY_TF"; exit 1; }
     # keras 2.2.4 走 pip (conda 版本会拉高依赖); 固定 h5py<3 否则 load_model 报 'str' has no attribute 'decode'
-    retry 3 pip install --timeout 120 --retries 10 "keras==2.2.4" "h5py==2.10.0" "numpy<1.17" "protobuf<3.21" "scipy<1.6"
+    retry 3 "$PY_TF" -m pip install --timeout 120 --retries 10 "keras==2.2.4" "h5py==2.10.0" "numpy<1.17" "protobuf<3.21" "scipy<1.6"
     echo " ---- $ENV_TF_NAME 版本核对 ----"
-    python - <<'PY'
+    "$PY_TF" - <<'PY'
 import tensorflow as tf, keras, h5py, numpy
 print("tensorflow", tf.__version__, "| keras", keras.__version__, "| h5py", h5py.__version__, "| numpy", numpy.__version__)
 print("TF built with CUDA:", tf.test.is_built_with_cuda())
 PY
-    conda deactivate
 }
 
 # ============================================================
@@ -147,23 +152,23 @@ install_bert() {
     if maybe_remove "$ENV_BERT_NAME"; then
         retry 3 $SOLVER create -n "$ENV_BERT_NAME" -y python=3.6 pip
     fi
-    conda activate "$ENV_BERT_NAME"
+    PY_BERT="$CONDA_BASE/envs/$ENV_BERT_NAME/bin/python"
+    [ -x "$PY_BERT" ] || { echo "[错误] 环境创建失败, 未找到 $PY_BERT"; exit 1; }
     # torch 1.10.1 是最后一个支持 py3.6 的版本, cu113 内置 sm_75 (GTX 1650)
     # torch+cu113 约 1.8GB, 加超时/重试; 断线可直接重跑本脚本 (bert)
-    retry 3 pip install --timeout 120 --retries 10 torch==1.10.1+cu113 \
+    retry 3 "$PY_BERT" -m pip install --timeout 120 --retries 10 torch==1.10.1+cu113 \
         --extra-index-url https://download.pytorch.org/whl/cu113
-    retry 3 pip install --timeout 120 --retries 10 "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
+    retry 3 "$PY_BERT" -m pip install --timeout 120 --retries 10 "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
         boto3 requests regex tqdm "pytorch_pretrained_bert==0.6.1"
     # 安装仓库自带的 bert_sklearn (可编辑模式, 改代码即时生效)
-    pip install -e "$PROJECT_DIR/bert_sklearn"
+    "$PY_BERT" -m pip install -e "$PROJECT_DIR/bert_sklearn"
     echo " ---- $ENV_BERT_NAME 版本核对 ----"
-    python - <<'PY'
+    "$PY_BERT" - <<'PY'
 import torch, sklearn, numpy, bert_sklearn, pytorch_pretrained_bert
 print("torch", torch.__version__, "| cuda build", torch.version.cuda,
       "| sklearn", sklearn.__version__, "| numpy", numpy.__version__,
       "| bert_sklearn", bert_sklearn.__version__)
 PY
-    conda deactivate
 }
 
 case "$WHAT" in
