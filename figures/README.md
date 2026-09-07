@@ -41,6 +41,14 @@ healthy/natural/tasty icon trio).
 paths/ellipses referencing one `<defs>` gradient block (recolor globally).
 Generators kept out of the repo; export via PDF/EPS or 600-dpi TIFF.
 
+**Journal compliance** - both figures ship as editable SVG (master), vector
+PDF and 2340x1590 PNG (~300 dpi at double-column width). Captions use a bold
+"Figure 1 |" lead plus a one-line summary; alt text is embedded via SVG
+`<title>`/`<desc>`; minimum label size 8. A deuteranopia deltaE audit passes
+for all informational colour pairs (bead classes 114, well states 44/61;
+"weak" wells also carry a white centre dot as a redundant cue). Zone tints
+are decorative - panel identity is carried by letter chips and titles.
+
 **Reproducibility** - the full methodology (layout system, glossy-icon rules,
 renderer-safe constraints, overflow + pixel-probe QA pipeline) is captured in
 `.claude/skills/biorender-svg-figure/` (SKILL.md + references/helpers.py).

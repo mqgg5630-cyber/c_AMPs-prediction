@@ -24,7 +24,7 @@ AMP prediction) and `figures/umami_ml_fig1.svg` (ML for umami peptides).
 - Story flows a→b→c (top row), then d←e←f visual order / f→a loop; connect
   zones with 3 px gray arrows through the gutters.
 - Text budget: ≤ ~60 short labels total. Captions 8–8.5 pt gray under icons,
-  a few bold take-aways, tiny 7–7.5 pt for minor scenes.
+  a few bold take-aways; minor scenes at 8 pt — **hard font floor, nothing below 8**.
 
 ## 2. The glossy look (construction rules)
 
@@ -74,10 +74,33 @@ The PNG pipeline is `svglib → renderPDF → pymupdf Matrix(2,2)`. Its quirks:
 7. **Density audit** — no empty pocket larger than ~100×60 px; every zone
    ≥ 2 scenes; heroes get shadow + sparkles. List zone contents by coordinate
    before declaring done.
-8. Commit `figures/*.svg *.png` + update `figures/README.md`; one commit per
-   version bump; push to the working branch.
+8. Export a **vector PDF** next to the PNG (journals require vector or
+   ≥300 dpi); commit `figures/*.svg *.png *.pdf` + update `figures/README.md`;
+   one commit per version bump; push to the working branch.
 
-## 5. Common pitfalls (all seen in practice)
+
+## 5. Top-journal compliance checklist (Nature/Cell graphical-abstract bar)
+
+- **Caption**: bold `Figure n |` lead, roman title, then a one-line summary
+  underneath (≤ 2 caption lines inside the canvas).
+- **Alt text**: `<title>` + `<desc>` telling the whole story (accessibility;
+  required by many journals).
+- **Font floor**: nothing below size 8; captions 8–8.5, zone titles 12,
+  figure title 16.
+- **Colour-blind safety**: audit every *informational* colour pair with
+  `cbt_audit` / `deltaE(..., "deuteranopia")` from helpers.py. Pass =
+  ΔE-deut ≥ 25 (or ≥ 15 with normal ΔE ≥ 25). Reference results from the two
+  precedent figures: bead blue/red 114, green/gray wells 44, green/amber
+  wells 61 — all pass. Decorative zone tints are exempt (panel identity is
+  carried by letter chips + titles; WCAG 1.4.1 "never colour alone"), and any
+  colour that encodes *state* gets a redundant non-colour cue (e.g. white
+  centre dots on "weak" MIC wells).
+- **Deliverables**: editable SVG (master) + vector PDF + PNG ≥ 300 dpi at
+  double-column width (2340×1590 ≈ 300 dpi at 198 mm).
+- **Provenance**: all icons drawn from scratch in code — no subscription
+  assets embedded, safe to publish as original artwork.
+
+## 6. Common pitfalls (all seen in practice)
 
 | Bug | Symptom | Fix |
 |---|---|---|
@@ -88,7 +111,7 @@ The PNG pipeline is `svglib → renderPDF → pymupdf Matrix(2,2)`. Its quirks:
 | Bare opacity on shapes | solid blobs in PNG | fill-opacity only; solid tints for washes |
 | Sparse zones | "太简单了" | density audit (step 7), 3+ scenes per zone |
 
-## 6. Icon recipes (anchor-centered, ~20–36 primitives each)
+## 7. Icon recipes (anchor-centered, ~20–36 primitives each)
 
 peptide chain (beads on a line) · DNA double helix (two phase-shifted sine
 strokes + rungs) · database (stacked ellipse cylinders) · monitor with glowing

@@ -132,6 +132,34 @@ def star5(x,y,r):
         f'stroke-width="0.8" stroke-linejoin="round"/>')
     PELL(x-r*0.25,y-r*0.3,r*0.3,r*0.18,"#FFFFFF",opacity=0.65)
 
+# ---------- colour-blind safety (top-journal audits) ----------
+def _hex2rgb(h): return tuple(int(h[i:i+2],16)/255 for i in (1,3,5))
+def _lab(rgb):
+    lin=[c/12.92 if c<=0.04045 else ((c+0.055)/1.055)**2.4 for c in rgb]
+    X=(0.4124*lin[0]+0.3576*lin[1]+0.1805*lin[2])/0.95047
+    Y=0.2126*lin[0]+0.7152*lin[1]+0.0722*lin[2]
+    Z=(0.0193*lin[0]+0.1192*lin[1]+0.9505*lin[2])/1.08883
+    f=lambda t:t**(1/3) if t>0.008856 else 7.787*t+16/116
+    fx,fy,fz=f(X),f(Y),f(Z)
+    return (116*fy-16,500*(fx-fy),200*(fy-fz))
+def deuteranopia(rgb):
+    """Vienot 1999 deuteranope simulation of an sRGB triplet."""
+    r,g,b=rgb; return (0.625*r+0.375*g,0.7*r+0.3*g,0.3*g+0.7*b)
+def deltaE(a,b,vision="normal"):
+    """CIE76 deltaE between two hex colours, optionally deuteranopia-simulated."""
+    f=deuteranopia if vision=="deuteranopia" else (lambda c:c)
+    A,B=_lab(f(_hex2rgb(a))),_lab(f(_hex2rgb(b)))
+    return math.sqrt(sum((A[i]-B[i])**2 for i in range(3)))
+def cbt_audit(pairs):
+    """pairs: [(name, hexA, hexB), ...] -> [(name, dE, dE_deut, passed)].
+    Pass rule for INFORMATIONAL colours: dE_deut>=25, or >=15 with dE>=25.
+    Decorative tints are exempt (WCAG 1.4.1: never colour alone)."""
+    out=[]
+    for nm,a,b in pairs:
+        n1,n2=deltaE(a,b),deltaE(a,b,"deuteranopia")
+        out.append((nm,round(n1,1),round(n2,1),n2>=25 or (n2>=15 and n1>=25)))
+    return out
+
 def zone_scaffold(zones):
     """zones: list of (x,y,w,h,chip_grad,letter,title,tint_fill,tint_border).
     Emits tinted panels + letter chips + titles; returns nothing."""
@@ -150,5 +178,6 @@ if __name__=="__main__":   # smoke test: renders a mini card of primitives
         SPH(40+k*60,70,18,nm)
     SHAD(210,150,120,14); star5(160,140,14); sparkle(260,140,10)
     add('</svg>')
+    print("cbt:", cbt_audit([("bead blue vs red","#2B5EA7","#C43D2B")]))
     open('/tmp/helpers_smoke.svg','w').write("\n".join(L))
     print("smoke svg ->", '/tmp/helpers_smoke.svg', len(L), "elements")

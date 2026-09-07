@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1060" viewBox="0 0 1560 1060" font-family="Helvetica, Arial, sans-serif">
 <title>Machine learning for umami peptide discovery</title>
+<desc>Graphical abstract. Umami foods are proteolysed into peptides that machine-learning models screen; candidates are confirmed by sensory panels, electronic tongues and T1R1/T1R3 receptor assays, enabling flavourful low-salt products.</desc>
 <defs>
 <radialGradient id="gBlue" cx="0.35" cy="0.3" r="0.85"><stop offset="0%" stop-color="#9EC7FF" stop-opacity="1"/><stop offset="55%" stop-color="#6492D3" stop-opacity="1"/><stop offset="100%" stop-color="#2B5EA7" stop-opacity="1"/></radialGradient>
 <radialGradient id="gRed" cx="0.35" cy="0.3" r="0.85"><stop offset="0%" stop-color="#FFB4A0" stop-opacity="1"/><stop offset="55%" stop-color="#E17865" stop-opacity="1"/><stop offset="100%" stop-color="#C43D2B" stop-opacity="1"/></radialGradient>
@@ -271,7 +272,7 @@
 <circle cx="720.0" cy="275.0" r="3.8" fill="url(#gAmber)"/>
 <path d="M717.3,273.6 a1.6,1.0 0 1 0 3.2,0 a1.6,1.0 0 1 0 -3.2,0 Z" fill="#FFFFFF" fill-opacity="0.5"/>
 <rect x="688.0" y="358.0" width="118.0" height="18.0" fill="#FFFFFF" stroke="#C7D3E0" stroke-width="1" rx="9"/>
-<text x="747.0" y="370.5" font-size="7.5" fill="#3B4A6B" text-anchor="middle">ultrafiltration &#60; 3 kDa</text>
+<text x="747.0" y="370.5" font-size="8" fill="#3B4A6B" text-anchor="middle">ultrafiltration &#60; 3 kDa</text>
 <rect x="872.0" y="300.0" width="14.0" height="50.0" fill="#FFFFFF" stroke="#9FB0C0" stroke-width="1.2" rx="7"/>
 <rect x="873.5" y="321.5" width="11.0" height="28.5" fill="url(#gAmber)" rx="5.5"/>
 <ellipse cx="879.0" cy="300.0" rx="7.0" ry="2.4" fill="#FFFFFF" stroke="#9FB0C0" stroke-width="1"/>
@@ -350,7 +351,7 @@
 <ellipse cx="800.0" cy="429.0" rx="3.5" ry="2.0" fill="#9FB0C0"/>
 <path d="M794,408 L794.96,411.04 L798,412 L794.96,412.96 L794,416 L793.04,412.96 L790,412 L793.04,411.04 Z" fill="#E8B31A" stroke="#37474F" stroke-width="1" fill-opacity="1"/>
 <ellipse cx="759.0" cy="436.0" rx="2.5" ry="12.0" fill="#FFFFFF" fill-opacity="0.6"/>
-<text x="768.0" y="481.0" font-size="7.5" fill="#7F8A96" text-anchor="middle">peptide powder</text>
+<text x="768.0" y="481.0" font-size="8" fill="#7F8A96" text-anchor="middle">peptide powder</text>
 </g>
 <g id="zone-c">
 <circle cx="1108.0" cy="170.0" r="4.6" fill="url(#gBlue)"/>
@@ -524,7 +525,7 @@
 <path d="M1146.7,341.3 a1.9,1.2 0 1 0 3.9,0 a1.9,1.2 0 1 0 -3.9,0 Z" fill="#FFFFFF" fill-opacity="0.5"/>
 <line x1="1144.0" y1="337.0" x2="1147.0" y2="340.0" stroke="#9AA8B5" stroke-width="1.6" stroke-linecap="round"/>
 <path d="M1156,325 L1156.96,328.04 L1160,329 L1156.96,329.96 L1156,333 L1155.04,329.96 L1152,329 L1155.04,328.04 Z" fill="#E8B31A" stroke="#37474F" stroke-width="1" fill-opacity="1"/>
-<text x="1145.0" y="398.0" font-size="7.5" fill="#7F8A96" text-anchor="middle">key motifs</text>
+<text x="1145.0" y="398.0" font-size="8" fill="#7F8A96" text-anchor="middle">key motifs</text>
 <path d="M1424,114 L1425.44,118.56 L1430,120 L1425.44,121.44 L1424,126 L1422.56,121.44 L1418,120 L1422.56,118.56 Z" fill="#E8B31A" stroke="#37474F" stroke-width="1" fill-opacity="1"/>
 <polygon points="1448.0,142.0 1450.1,147.1 1455.6,147.5 1451.4,151.1 1452.7,156.5 1448.0,153.6 1443.3,156.5 1444.6,151.1 1440.4,147.5 1445.9,147.1" fill="url(#gGold)" stroke="#C98F0A" stroke-width="0.8" stroke-linejoin="round"/>
 <path d="M1443.6,147.6 a2.4,1.4 0 1 0 4.8,0 a2.4,1.4 0 1 0 -4.8,0 Z" fill="#FFFFFF" fill-opacity="0.65"/>
@@ -630,7 +631,7 @@
 </g>
 <g id="zone-e">
 <rect x="530.0" y="536.0" width="140.0" height="18.0" fill="#FFFFFF" stroke="#C7D3E0" stroke-width="1" rx="9"/>
-<text x="600.0" y="548.5" font-size="7.5" fill="#3B4A6B" text-anchor="middle">in vitro validation</text>
+<text x="600.0" y="548.5" font-size="8" fill="#3B4A6B" text-anchor="middle">in vitro validation</text>
 <rect x="589.0" y="563.0" width="18.0" height="6.0" fill="#8FA6CF" stroke="#54719F" stroke-width="1" rx="2"/>
 <rect x="590.0" y="568.0" width="16.0" height="24.0" fill="#F4FAFF" stroke="#9FB0C0" stroke-width="1.2" rx="3"/>
 <rect x="592.0" y="579.0" width="12.0" height="11.0" fill="url(#gRed)" rx="2"/>
@@ -845,15 +846,15 @@
 <path d="M108.1,965.8 a6.9,1.8 0 1 0 13.8,0 a6.9,1.8 0 1 0 -13.8,0 Z" fill="#31506B" fill-opacity="0.06"/>
 <path d="M115,964.65 C100.05,954.3 96.6,942.8 105.8,940.5 C111.55,938.775 115,943.95 115,947.4 C115,943.95 118.45,938.775 124.2,940.5 C133.4,942.8 129.95,954.3 115,964.65 Z" fill="url(#gHeart)" stroke="#C23350" stroke-width="1.2" stroke-linejoin="round"/>
 <ellipse cx="109.2" cy="945.1" rx="2.9" ry="4.0" fill="#FFFFFF" fill-opacity="0.55"/>
-<text x="115.0" y="984.0" font-size="7" fill="#7F8A96" text-anchor="middle">healthy</text>
+<text x="115.0" y="984.0" font-size="8" fill="#7F8A96" text-anchor="middle">healthy</text>
 <path d="M255,939.9 C267.1,945.4 267.1,958.6 255,964.1 C242.9,958.6 242.9,945.4 255,939.9 Z" fill="url(#gLeaf)" stroke="#5FA244" stroke-width="1.1" stroke-linejoin="round"/>
 <line x1="255.0" y1="943.2" x2="255.0" y2="960.8" stroke="#5FA244" stroke-width="1" stroke-linecap="round"/>
 <line x1="255.0" y1="949.8" x2="260.5" y2="946.5" stroke="#5FA244" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="255.0" y1="954.2" x2="249.5" y2="957.5" stroke="#5FA244" stroke-width="0.8" stroke-linecap="round"/>
-<text x="255.0" y="984.0" font-size="7" fill="#7F8A96" text-anchor="middle">natural</text>
+<text x="255.0" y="984.0" font-size="8" fill="#7F8A96" text-anchor="middle">natural</text>
 <polygon points="395.0,941.0 397.4,946.7 403.6,947.2 398.9,951.3 400.3,957.3 395.0,954.0 389.7,957.3 391.1,951.3 386.4,947.2 392.6,946.7" fill="url(#gGold)" stroke="#C98F0A" stroke-width="0.8" stroke-linejoin="round"/>
 <path d="M390.1,947.3 a2.7,1.6 0 1 0 5.4,0 a2.7,1.6 0 1 0 -5.4,0 Z" fill="#FFFFFF" fill-opacity="0.65"/>
-<text x="395.0" y="984.0" font-size="7" fill="#7F8A96" text-anchor="middle">tasty</text>
+<text x="395.0" y="984.0" font-size="8" fill="#7F8A96" text-anchor="middle">tasty</text>
 </g>
 <line x1="482.0" y1="150.0" x2="496.0" y2="150.0" stroke="#9AA8B5" stroke-width="3" stroke-linecap="round"/>
 <polygon points="496.0,150.0 488.0,154.0 488.0,146.0" fill="#9AA8B5"/>
@@ -865,5 +866,7 @@
 <polygon points="1060.0,760.0 1068.0,756.0 1068.0,764.0" fill="#9AA8B5"/>
 <line x1="494.0" y1="760.0" x2="482.0" y2="760.0" stroke="#9AA8B5" stroke-width="3" stroke-linecap="round"/>
 <polygon points="482.0,760.0 490.0,756.0 490.0,764.0" fill="#9AA8B5"/>
-<text x="34.0" y="1036.0" font-size="10.5" fill="#5A6B7A" text-anchor="start" font-style="italic">Figure 1 | Machine learning for umami peptide discovery.</text>
+<text x="34.0" y="1036.0" font-size="10.5" fill="#37474F" text-anchor="start" font-weight="bold">Figure 1 |</text>
+<text x="96.0" y="1036.0" font-size="10.5" fill="#5A6B7A" text-anchor="start">Machine learning for umami peptide discovery.</text>
+<text x="34.0" y="1050.0" font-size="9" fill="#7F8A96" text-anchor="start">Umami foods yield peptides that ML models screen and panels validate as T1R1/T1R3 agonists for low-salt flavour.</text>
 </svg>
