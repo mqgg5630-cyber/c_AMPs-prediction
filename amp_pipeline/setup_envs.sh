@@ -228,8 +228,15 @@ install_bert() {
         torch_ok || { echo "[错误] torch wheel 下载失败, 请重跑本脚本 (会续传), 或手动下载到 $TORCH_LOCAL"; exit 1; }
         pip_install "$PY_BERT" "$TORCH_LOCAL"
     fi
-    pip_install "$PY_BERT" "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
-        boto3 requests regex tqdm "pytorch_pretrained_bert==0.6.1"
+    # 逐包安装 + 各自重试: 网络掐断时 pip 会把整条命令回滚, 一起装很容易全军覆没
+    for pkg in "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" requests regex tqdm \
+               "botocore<1.27" "boto3<1.24" "pytorch_pretrained_bert==0.6.1"; do
+        name="${pkg%%[<=>]*}"
+        if "$PY_BERT" -m pip show "$name" >/dev/null 2>&1; then
+            echo "  [已装] $name"; continue
+        fi
+        retry 5 pip_install "$PY_BERT" "$pkg" || { echo "[错误] $pkg 安装失败, 请重跑 setup_envs.sh bert"; exit 1; }
+    done
     # 安装仓库自带的 bert_sklearn (可编辑模式, 改代码即时生效)
     pip_install "$PY_BERT" -e "$PROJECT_DIR/bert_sklearn"
     echo " ---- $ENV_BERT_NAME 版本核对 ----"
