@@ -467,6 +467,11 @@ class BaseBertEstimator(BaseEstimator):
                                                  num_mlp_layers=num_mlp_layers,
                                                  num_mlp_hiddens=num_mlp_hiddens)
         params = state['params']
+        # scikit-learn >= 0.24 的 set_params 会先 get_params() 读取全部构造参数属性;
+        # 恢复路径下这些属性尚未赋值会抛 AttributeError, 因此先直接 setattr 再 set_params
+        for k, v in params.items():
+            setattr(self, k, v)
+        self.restore_file = restore_file
         self.set_params(**params)
         self.input_text_pairs = state['input_text_pairs']
         self.id2label = state['id2label']

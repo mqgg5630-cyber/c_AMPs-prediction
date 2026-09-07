@@ -9,6 +9,11 @@ from os import environ
 from sys import argv
 import os, sys, glob
 
+# 兜底: 确保能从任意 cwd import 项目根目录下的 bert_sklearn
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 # CPU 多核线程数优化 (例如在 HPC 64/96 核上加速)
 import torch
 omp_threads = os.environ.get("OMP_NUM_THREADS", "")

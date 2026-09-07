@@ -237,8 +237,13 @@ install_bert() {
         fi
         retry 5 pip_install "$PY_BERT" "$pkg" || { echo "[错误] $pkg 安装失败, 请重跑 setup_envs.sh bert"; exit 1; }
     done
-    # 安装仓库自带的 bert_sklearn (可编辑模式, 改代码即时生效)
-    pip_install "$PY_BERT" -e "$PROJECT_DIR/bert_sklearn"
+    # 安装仓库自带的 bert_sklearn: 其 setup.py 位于包目录内部, pip -e 装出来的不是 bert_sklearn 包本身,
+    # 所以改为写 .pth 把【项目根目录】加进 sys.path (改代码即时生效, 任意 cwd 可 import)
+    "$PY_BERT" -m pip uninstall -y bert_sklearn >/dev/null 2>&1 || true
+    SITE_PKGS="$("$PY_BERT" -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])')"
+    echo "$PROJECT_DIR" > "$SITE_PKGS/c_amps_bert_sklearn.pth"
+    echo "  [bert_sklearn] 已写入 $SITE_PKGS/c_amps_bert_sklearn.pth -> $PROJECT_DIR"
+    (cd /tmp && "$PY_BERT" -c "import bert_sklearn, sklearn; print('  bert_sklearn 可从任意目录导入 ✓  (scikit-learn', sklearn.__version__, ')')")
     echo " ---- $ENV_BERT_NAME 版本核对 ----"
     "$PY_BERT" - <<'PY'
 import torch, sklearn, numpy, bert_sklearn, pytorch_pretrained_bert
