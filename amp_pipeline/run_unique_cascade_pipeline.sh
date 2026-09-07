@@ -55,27 +55,32 @@ if (( UNIQUE == 0 )); then echo '没有可预测序列'; exit 0; fi
 
 # 2. format + Attention + LSTM。模型脚本只看到标准 20-AA 序列，因此行数可严格对齐。
 FORM="$WORK/unique_formatted_300.txt"
+K0=$(date +%s)
 if [[ ! -s "$FORM" ]]; then perl "$PROJECT/script/format.pl" "$WORK/unique.fa" none > "$FORM"; fi
 export TF_CHUNK_SIZE="${TF_CHUNK_SIZE:-20000}" TF_PREDICT_BATCH_SIZE="${TF_PREDICT_BATCH_SIZE:-1024}"
 ATT="$WORK/attention.tsv"; LSTM="$WORK/lstm.tsv"
 if [[ ! -s "$ATT" ]]; then (cd "$PROJECT/script" && "$TF_ENV/bin/python" prediction_attention.py "$FORM" "$ATT"); fi
 if [[ ! -s "$LSTM" ]]; then (cd "$PROJECT/script" && "$TF_ENV/bin/python" prediction_lstm.py "$FORM" "$LSTM"); fi
-NOW=$(date +%s); RATE=$(awk -v n="$UNIQUE" -v t="$((NOW-T0))" 'BEGIN{if(t>0)printf "%.2f",n/t;else print 0}')
-ETA=$(awk -v n="$TOTAL_N" -v r="$RATE" 'BEGIN{if(r>0)printf "%.1f",n/r/3600;else print "NA"}')
-stamp "Attention+LSTM 完成；唯一序列=$UNIQUE；阶段总速率约 ${RATE}/秒；按输入量估算 Keras 阶段约 ${ETA} 小时"
+K1=$(date +%s); KSEC=$((K1-K0))
+KRATE=$(awk -v n="$UNIQUE" -v t="$KSEC" 'BEGIN{if(t>0)printf "%.2f",n/t;else print 0}')
+KETA=$(awk -v n="$TOTAL_N" -v r="$KRATE" 'BEGIN{if(r>0)printf "%.1f",n/r/3600;else print "NA"}')
+stamp "Attention+LSTM 完成；本阶段用时 ${KSEC}s，速率 ${KRATE}/秒；全量 Keras 估算约 ${KETA} 小时"
 
 # 3. 只把可能成为三票的序列交给 BERT
 "$BERT_ENV/bin/python" "$SCRIPTDIR/cascade_manifest.py" select --grouped "$GROUPED" --work "$WORK" --att "$ATT" --lstm "$LSTM" --mode "$MODE_RUN" | tee "$WORK/select.log"
 CAND=$(sed -n 's/^CANDIDATE_COUNT=//p' "$WORK/select.log" | tail -1)
 PCT=$(sed -n 's/^CANDIDATE_PERCENT=//p' "$WORK/select.log" | tail -1)
 : > "$WORK/bert.tsv"
+B0=$(date +%s)
 if (( CAND > 0 )); then
   export BERT_USE_CUDA="${BERT_USE_CUDA:-auto}" BERT_EVAL_BATCH_SIZE="${BERT_EVAL_BATCH_SIZE:-64}"
   (cd "$PROJECT/script" && "$BERT_ENV/bin/python" prediction_bert.py "$WORK/candidates.fa" "$WORK/bert.tsv")
 fi
-NOW=$(date +%s); BRATE=$(awk -v n="$CAND" -v t="$((NOW-T0))" 'BEGIN{if(t>0)printf "%.2f",n/t;else print 0}')
-BETA=$(awk -v n="$CAND" -v r="$BRATE" 'BEGIN{if(r>0)printf "%.1f",n/r/3600;else print "NA"}')
-stamp "BERT strict 候选=$CAND，占有效序列 ${PCT}%；当前累计 BERT 速率约 ${BRATE}/秒，候选阶段约 ${BETA} 小时"
+B1=$(date +%s); BSEC=$((B1-B0))
+BRATE=$(awk -v n="$CAND" -v t="$BSEC" 'BEGIN{if(t>0)printf "%.2f",n/t;else print 0}')
+FULLCAND=$(awk -v n="$TOTAL_N" -v p="$PCT" 'BEGIN{printf "%.0f",n*p/100}')
+BETA=$(awk -v n="$FULLCAND" -v r="$BRATE" 'BEGIN{if(r>0)printf "%.1f",n/r/3600;else print "NA"}')
+stamp "BERT strict 候选=$CAND，占有效序列 ${PCT}%；本阶段用时 ${BSEC}s，实际速率 ${BRATE}/秒；全量 BERT 估算约 ${BETA} 小时（预计候选 ${FULLCAND} 条）"
 if [[ "$MODE" == bench ]]; then
   stamp "BENCH 完成：以上是本机实测上限参考；正式运行: bash $0 '$GROUPED' '$RESULTS' strict"
   exit 0
