@@ -28,7 +28,17 @@ for x in att.h5 lstm.h5 bert.bin; do [[ -f "$PROJECT/Models/$x" ]] || { echo "�
 T0=$(date +%s); stamp(){ echo "[$(( $(date +%s)-T0 ))s] $*"; }
 count_fa(){ awk '/^>/{n++} END{print n+0}' "$1"; }
 TOTAL="$GROUPED/sORF_All_Total.fa"
-if [[ -f "$TOTAL" ]]; then TOTAL_N=$(count_fa "$TOTAL"); else TOTAL_N=$(find "$GROUPED" -type f -name '*.fa' ! -name sORF_All_Total.fa -print0 | xargs -0 awk '/^>/{n++} END{print n+0}') ; fi
+# 优先从分组脚本生成的 manifest 读取总数，避免为了启动 bench 再扫描数 GB 的 FASTA。
+TOTAL_N=""
+MANIFEST="$GROUPED/group_manifest.tsv"
+if [[ -s "$MANIFEST" ]]; then
+  TOTAL_N=$(awk -F '\t' '$1=="All" && $2=="Total" {print $4; exit}' "$MANIFEST")
+fi
+if [[ -z "$TOTAL_N" ]]; then
+  echo "[准备] 未找到 group_manifest.tsv，正在统计 FASTA 记录数；大文件可能需要几分钟..." >&2
+  if [[ -f "$TOTAL" ]]; then TOTAL_N=$(count_fa "$TOTAL"); else TOTAL_N=$(find "$GROUPED" -type f -name '*.fa' ! -name sORF_All_Total.fa -print0 | xargs -0 awk '/^>/{n++} END{print n+0}') ; fi
+fi
+TOTAL_N="${TOTAL_N:-0}"
 stamp "模式=$MODE_RUN；输入记录约 $TOTAL_N 条；严格三票筛选: att>0.5 且 lstm>0.5"
 if [[ "$MODE" == bench ]]; then stamp "bench 只取前 $MAX 条唯一序列；正式运行请把第三参数改为 strict"; fi
 
