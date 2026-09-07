@@ -56,6 +56,47 @@ echo "=================================================="
 
 env_exists() { conda env list | awk '{print $1}' | grep -qx "$1"; }
 
+# ---------- 大包预下载 (断点续传 + 多镜像重试) ----------
+# 国内镜像对 >100MB 的包经常中途断线 (SSL unexpected eof), mamba 不会续传, 直接失败。
+# 这里先用 wget -c 把大包拉到 pkgs 缓存, mamba 创建环境时会直接复用, 不再重复下载。
+PKGS_DIR="$CONDA_BASE/pkgs"
+MIRRORS=(
+    "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/linux-64"
+    "https://mirrors.ustc.edu.cn/anaconda/pkgs/main/linux-64"
+    "https://mirrors.bfsu.edu.cn/anaconda/pkgs/main/linux-64"
+    "https://repo.anaconda.com/pkgs/main/linux-64"
+)
+prefetch_pkg() {   # prefetch_pkg <filename>
+    local fn="$1" dst="$PKGS_DIR/$1"
+    mkdir -p "$PKGS_DIR"
+    if [ -f "$dst" ] && [ ! -f "$dst.part" ]; then
+        echo "  [已缓存] $fn"; return 0
+    fi
+    for m in "${MIRRORS[@]}"; do
+        echo "  [下载] $fn  <- $m"
+        # -c 续传, 断线自动重试 20 次, 每次间隔 3s; 用 .part 标记未完成
+        if wget -c -q --show-progress --tries=20 --waitretry=3 --read-timeout=60 \
+                -O "$dst" "$m/$fn" 2>&1 && [ -s "$dst" ]; then
+            rm -f "$dst.part"; echo "  [完成] $fn"; return 0
+        fi
+        touch "$dst.part"
+        echo "  [失败] 换下一个镜像 ..."
+    done
+    echo "  [错误] $fn 所有镜像都下载失败, 请检查网络后重跑本脚本 (会自动续传)"
+    return 1
+}
+
+# mamba/conda create 加重试 (小包偶发断线)
+retry() {  # retry <n> <cmd...>
+    local n="$1"; shift
+    local i
+    for ((i=1; i<=n; i++)); do
+        "$@" && return 0
+        echo "  [重试 $i/$n] 命令失败, 10s 后重试: $*"; sleep 10
+    done
+    return 1
+}
+
 maybe_remove() {
     if env_exists "$1"; then
         if [ "${FORCE:-0}" = "1" ]; then
@@ -76,14 +117,18 @@ install_tf() {
     echo ""
     echo "############## [1/2] 创建 $ENV_TF_NAME (TF1.14-GPU) ##############"
     if maybe_remove "$ENV_TF_NAME"; then
+        echo " ---- 预下载大包 (cudatoolkit / cudnn / tensorflow-base, 共约 600MB) ----"
+        prefetch_pkg "cudatoolkit-10.0.130-0.conda"
+        prefetch_pkg "cudnn-7.6.5-cuda10.0_0.conda"
+        prefetch_pkg "tensorflow-base-1.14.0-gpu_py36h8d69cac_0.conda"
         # defaults 频道自带 tensorflow-gpu 1.14 + cudatoolkit 10.0 + cudnn 7.6 (py36)
-        $SOLVER create -n "$ENV_TF_NAME" -y python=3.6 \
-            tensorflow-gpu=1.14.0 cudatoolkit=10.0 "cudnn>=7.6,<8" \
+        retry 3 $SOLVER create -n "$ENV_TF_NAME" -y python=3.6 \
+            tensorflow-gpu=1.14.0 cudatoolkit=10.0.130 "cudnn=7.6.5" \
             numpy=1.16 "h5py<3" -c defaults
     fi
     conda activate "$ENV_TF_NAME"
     # keras 2.2.4 走 pip (conda 版本会拉高依赖); 固定 h5py<3 否则 load_model 报 'str' has no attribute 'decode'
-    pip install --no-cache-dir "keras==2.2.4" "h5py==2.10.0" "numpy<1.17" "protobuf<3.21" "scipy<1.6"
+    retry 3 pip install --timeout 120 --retries 10 "keras==2.2.4" "h5py==2.10.0" "numpy<1.17" "protobuf<3.21" "scipy<1.6"
     echo " ---- $ENV_TF_NAME 版本核对 ----"
     python - <<'PY'
 import tensorflow as tf, keras, h5py, numpy
@@ -100,15 +145,17 @@ install_bert() {
     echo ""
     echo "############## [2/2] 创建 $ENV_BERT_NAME (BERT / PyTorch) ##############"
     if maybe_remove "$ENV_BERT_NAME"; then
-        $SOLVER create -n "$ENV_BERT_NAME" -y python=3.6 pip
+        retry 3 $SOLVER create -n "$ENV_BERT_NAME" -y python=3.6 pip
     fi
     conda activate "$ENV_BERT_NAME"
     # torch 1.10.1 是最后一个支持 py3.6 的版本, cu113 内置 sm_75 (GTX 1650)
-    pip install --no-cache-dir torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
-    pip install --no-cache-dir "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
+    # torch+cu113 约 1.8GB, 加超时/重试; 断线可直接重跑本脚本 (bert)
+    retry 3 pip install --timeout 120 --retries 10 torch==1.10.1+cu113 \
+        --extra-index-url https://download.pytorch.org/whl/cu113
+    retry 3 pip install --timeout 120 --retries 10 "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
         boto3 requests regex tqdm "pytorch_pretrained_bert==0.6.1"
     # 安装仓库自带的 bert_sklearn (可编辑模式, 改代码即时生效)
-    pip install --no-cache-dir -e "$PROJECT_DIR/bert_sklearn"
+    pip install -e "$PROJECT_DIR/bert_sklearn"
     echo " ---- $ENV_BERT_NAME 版本核对 ----"
     python - <<'PY'
 import torch, sklearn, numpy, bert_sklearn, pytorch_pretrained_bert
