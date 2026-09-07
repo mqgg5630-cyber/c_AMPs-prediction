@@ -59,6 +59,8 @@ export TF_PREDICT_BATCH_SIZE="${TF_PREDICT_BATCH_SIZE:-1024}"
 export TF_CHUNK_SIZE="${TF_CHUNK_SIZE:-50000}"
 export TF_CPP_MIN_LOG_LEVEL=2
 export LC_ALL=C   # sort/join 按字节序, 快且一致
+# Python 3.6 在 LC_ALL=C 下 stdout 会退化成 ASCII, 打印中文报 UnicodeEncodeError; 强制 UTF-8
+export PYTHONIOENCODING=utf-8
 
 # ---------- 预检 ----------
 for f in "$PY_TF" "$PY_BERT"; do [ -x "$f" ] || { echo "[错误] 找不到 $f (先跑 setup_envs.sh)"; exit 1; }; done

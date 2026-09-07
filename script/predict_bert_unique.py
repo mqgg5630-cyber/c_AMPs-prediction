@@ -23,6 +23,18 @@ import sys
 import time
 
 import numpy as np
+
+# 防止 LC_ALL=C 等环境下 stdout 为 ASCII 导致中文打印崩溃
+for _st in (sys.stdout, sys.stderr):
+    try:
+        _st.reconfigure(encoding="utf-8")   # py3.7+
+    except AttributeError:
+        import io
+        if getattr(_st, "encoding", "").lower() not in ("utf-8", "utf8"):
+            if _st is sys.stdout:
+                sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", line_buffering=True)
+            else:
+                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
 import torch
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
