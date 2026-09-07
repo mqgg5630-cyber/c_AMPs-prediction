@@ -201,8 +201,21 @@ install_bert() {
                 for u in "${TORCH_URLS[@]}"; do
                     sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
                     echo "  [第 $round 轮] 已下载 $((sz/1024/1024)) MB / 1736 MB, 续传 <- $u"
-                    wget -c -q --tries=200 --waitretry=2 --read-timeout=30 --progress=dot:giga \
-                         -O "$TORCH_LOCAL" "$u" 2>&1 | grep -oE '[0-9]+%' | uniq | tr '\n' ' '; echo
+                    # 后台下载 + 前台每 5s 打印进度 (已下载 MB / 速度), 避免看起来像卡死
+                    wget -c -q --tries=200 --waitretry=2 --read-timeout=30 -O "$TORCH_LOCAL" "$u" &
+                    wpid=$!
+                    prev=$sz; stall=0
+                    while kill -0 "$wpid" 2>/dev/null; do
+                        sleep 5
+                        cur=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
+                        spd=$(( (cur - prev) / 5 / 1024 ))
+                        printf "    进度: %5d MB / 1736 MB (%3d%%)  %6d KB/s\n" $((cur/1024/1024)) $((cur*100/TORCH_TOTAL)) "$spd"
+                        if [ "$cur" -le "$prev" ]; then stall=$((stall+1)); else stall=0; fi
+                        prev=$cur
+                        # 连续 60s 无进展 => 杀掉换下一个源
+                        if [ "$stall" -ge 12 ]; then echo "    60s 无进展, 换源 ..."; kill "$wpid" 2>/dev/null; fi
+                    done
+                    wait "$wpid" 2>/dev/null || true
                     torch_ok && break
                     sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
                     # 文件已满长度但 sha 不对 => 该源文件损坏/不一致, 删掉重来
