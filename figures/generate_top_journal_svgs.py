@@ -254,151 +254,207 @@ def method_md(x, y):
 
 
 def make_pg_ad_svg(out: Path):
-    """Rebuild the P. gingivalis/AD figure in the reference layout.
+    """Original BioRender-style graphical abstract for P. gingivalis -> AD.
 
-    This intentionally abandons the failed six-card scaffold. The composition is
-    a continuous left-to-right mechanism path with only true callout boxes:
-    periodontal source -> gingipains/OMVs -> bloodstream -> BBB -> brain, with
-    neuron and AChE-Aβ insets plus a compact evidence strip.
+    Strategy: do not copy the supplied reference. Build a new editorial layout:
+    an S-shaped pathogenic-cargo route links a large oral niche, a vascular/BBB
+    transit module, and a dense AD pathology hub, with a compact evidence ribbon.
     """
     L.clear()
     add(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="pgad-title pgad-desc">')
     add('<title id="pgad-title">P. gingivalis virulence factors connect periodontal infection to Alzheimer\'s disease mechanisms</title>')
-    add('<desc id="pgad-desc">Graphical abstract. Porphyromonas gingivalis in periodontal pockets releases gingipain proteases and outer-membrane vesicles that enter the bloodstream, cross or perturb the blood-brain barrier, and converge on neuronal injury, amyloid-beta plaques, tau fragments and acetylcholinesterase-mediated amyloid-beta nucleation. Transcriptomics, molecular docking and one-microsecond molecular dynamics provide orthogonal evidence.</desc>')
-    build_defs()
+    add('<desc id="pgad-desc">Original graphical abstract. Periodontal Porphyromonas gingivalis biofilms release gingipain proteases, outer-membrane vesicles and inflammatory mediators; these circulate through blood, stress the blood-brain barrier and converge on neuroinflammation, amyloid-beta plaques, tau fragments and acetylcholinesterase-mediated amyloid-beta nucleation. Omics, docking and molecular dynamics provide computational support.</desc>')
+    build_defs(extra=(('routeGrad', [('0%', '#FCE6E8', 1), ('45%', '#E6F3F8', 1), ('100%', '#EEF3FF', 1)]),))
     R(0, 0, W, H, "#FFFFFF")
+    txt(40, 38, "Oral infection-to-neurodegeneration axis", 18, "#111827", "start", "bold")
+    txt(40, 60, "P. gingivalis cargo links periodontal biofilms, vascular transit, BBB stress and AChE-Aβ pathology", 11, "#5B6875", "start")
+    LN(40, 76, 1520, 76, "#D8E1EA", 1.2)
 
-    # ---------- top mechanism canvas (reference-like; no card scaffold) ----------
+    def chip(x, y, letter, title, col="#34456A"):
+        C(x, y, 13, f"url(#gNavy)", "#243957", 0.8)
+        txt(x, y+4, letter, 12, "#FFFFFF", weight="bold")
+        txt(x+22, y+4, title, 12, col, "start", "bold")
+
+    # Soft original route band; the story is carried by geometry, not coloured zones.
+    P("M250,360 C385,220 505,230 615,330 C735,440 850,430 955,330 C1075,218 1192,260 1308,385", fill="none", stroke="#E9F0F8", sw=54, cap="round", opacity=1)
+    P("M250,360 C385,220 505,230 615,330 C735,440 850,430 955,330 C1075,218 1192,260 1308,385", fill="none", stroke="#9AA8B5", sw=3.0, cap="round")
+    HEAD(1308,385,1,0,"#9AA8B5",8)
+    for i in range(52):
+        t=i/51
+        # deterministic scatter along the route corridor
+        x=275 + 1000*t + 12*math.sin(20*t)
+        y=355 - 95*math.sin(math.pi*t*2.0) + 40*math.sin(math.pi*t*3.2) + (dr(i,41)-0.5)*52
+        C(x, y, 3.0+dr(i,42)*2.2, ["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"][i%4])
+        if i%9==0:
+            C(x+8, y-6, 13, "#FFFFFF", "#6A5FC5", 1.1)
+            C(x+8, y-6, 9, "#F7FBFF", "#8C82D8", 0.7, dash="2,2")
+            C(x+4, y-8, 2.8, "#0C7A72"); C(x+11, y-4, 2.8, "#D63426")
+
+    # A. Oral niche: large editorial hero with tissue layers, teeth, pocket, biofilm.
     group_start("zone-a")
-    txt(60, 50, "P. gingivalis", 20, "#111827", "start", "bold", "italic")
-    # large zoom circle with rods/fimbriae
-    C(155, 145, 86, "#F8FBFF", "#153B6E", 2.4)
+    chip(52, 110, "a", "periodontal biofilm")
+    SHAD(172, 625, 150, 13)
+    # alveolar bone with trabeculae
+    P("M20,552 C66,520 118,540 172,524 C225,508 274,536 326,514 L326,676 L20,676 Z", fill="#F3DEC9", stroke="#D6B998", sw=1.0)
     for i in range(70):
-        C(92+dr(i,1)*126, 82+dr(i,2)*116, 1.8+dr(i,3)*1.4, ["#6C4CA5", "#2D78A6", "#B36D5C"][i%3], opacity=0.75)
-    for i in range(7):
-        bx=95+dr(i,4)*120; by=92+dr(i,5)*95; ang=-32+dr(i,6)*70
-        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f})">')
-        R(-26, -7, 52, 14, "url(#gPurp)", "#4B357D", 1.0, rx=7)
-        PELL(-10, -5, 13, 3.4, "#FFFFFF", opacity=0.28)
-        for k in range(7):
-            a=math.radians(k*52 + 12)
-            LN(0, 0, 30*math.cos(a), 20*math.sin(a), "#4B357D", 0.85)
-        add('</g>')
-    # teeth, gingiva and bone cross-section: reference-like periodontal cross section
-    tooth_specs=[(-36,74,1.03),(35,80,1.10),(112,78,1.05),(190,70,0.96)]
-    for tx,tw,sc in tooth_specs:
-        # enamel crown, partly hidden by the gum line
-        P(f"M{tx+7},{384} C{tx-15},{322} {tx-2},{246} {tx+34},{224} C{tx+62},{205} {tx+92},{226} {tx+103},{276} C{tx+114},{325} {tx+96},{371} {tx+78},{392} C{tx+58},{409} {tx+26},{407} {tx+7},{384} Z", fill="#FFFDF8", stroke="#D8CFC7", sw=1.2)
-        # root/dentin column
-        P(f"M{tx+28},{382} C{tx+30},{438} {tx+18},{496} {tx+7},{552} C{tx+33},{565} {tx+70},{565} {tx+96},{552} C{tx+83},{496} {tx+81},{438} {tx+70},{382} Z", fill="#F5EDDF", stroke="#D5C6B5", sw=1.0)
-        PELL(tx+42, 253, 22, 7.5, "#FFFFFF", opacity=0.48)
-        LN(tx+68, 246, tx+82, 332, "#E7DED2", 0.8, opacity=0.55)
-    # gingival margin with inflamed pocket and plaque wedge
-    P("M0,416 C45,355 90,374 122,440 C154,365 233,351 296,417 L296,600 L0,600 Z", fill="#F8B9BE", stroke="#C55F69", sw=1.2)
-    P("M66,383 C98,389 116,420 124,461 C141,414 180,386 227,385 C212,474 183,546 128,565 C78,538 57,458 66,383 Z", fill="#E89AA0", stroke="#B85761", sw=1.0)
-    P("M120,403 C158,423 165,515 126,548 C97,511 95,430 120,403 Z", fill="#D69A6F", stroke="#A66E50", sw=1.0)
-    P("M112,397 C130,420 134,511 121,539", fill="none", stroke="#915A43", sw=1.0, opacity=0.7)
-    # subtle enamel/gum highlights
-    P("M7,438 C45,407 83,415 111,456", fill="none", stroke="#FFFFFF", sw=2.4, opacity=0.25)
-    P("M155,436 C191,405 233,410 285,441", fill="none", stroke="#FFFFFF", sw=2.2, opacity=0.23)
-    # biofilm rods in pocket
-    for i in range(26):
-        bx=98+dr(i,7)*70; by=405+dr(i,8)*120; ang=-70+dr(i,9)*140
-        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f}) scale(0.82)">')
-        R(-22, -6, 44, 12, "url(#gPurp)", "#4B357D", 0.9, rx=6)
-        PELL(-8, -4, 11, 3, "#FFFFFF", opacity=0.26)
+        C(35+dr(i,201)*270, 570+dr(i,202)*82, 4.0+dr(i,203)*8, "#FAEFE5", "#D4B897", 0.55)
+    # gums
+    P("M20,420 C70,350 124,372 166,440 C205,360 276,355 326,420 L326,560 C255,540 207,555 166,585 C112,554 65,548 20,562 Z", fill="#F8B1B8", stroke="#C75E69", sw=1.2)
+    P("M94,392 C123,400 152,435 165,486 C184,427 226,397 277,393 C255,500 219,574 164,596 C113,568 83,492 94,392 Z", fill="#E98E9A", stroke="#B95763", sw=1.0)
+    # teeth crowns and roots, partially behind gum
+    for tx,tw in [(-5,78),(68,86),(150,88),(236,78)]:
+        P(f"M{tx+8},385 C{tx-8},324 {tx+2},250 {tx+39},222 C{tx+72},197 {tx+108},230 {tx+112},294 C{tx+115},345 {tx+90},387 {tx+65},403 C{tx+39},416 {tx+18},405 {tx+8},385 Z", fill="#FFFDF8", stroke="#D7CFC4", sw=1.1)
+        P(f"M{tx+36},395 C{tx+36},452 {tx+25},506 {tx+10},552 C{tx+37},565 {tx+73},565 {tx+102},552 C{tx+88},502 {tx+83},450 {tx+72},395 Z", fill="#F5EDDF", stroke="#D4C5B3", sw=0.9)
+        PELL(tx+46, 255, 21, 7, "#FFFFFF", opacity=0.45)
+    # periodontal pocket/biofilm wedge
+    P("M156,402 C197,425 205,534 164,580 C130,536 124,424 156,402 Z", fill="#D59A68", stroke="#9B6547", sw=1.0)
+    for i in range(34):
+        bx=125+dr(i,210)*80; by=424+dr(i,211)*125; ang=-70+dr(i,212)*140
+        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f}) scale({0.62+dr(i,213)*0.22:.2f})">')
+        R(-24, -6, 48, 12, "url(#gPurp)", "#4B357D", 0.8, rx=6)
+        PELL(-8, -4, 11, 3, "#FFFFFF", opacity=0.25)
         for k in range(5):
-            a=math.radians(k*72)
-            LN(0, 0, 25*math.cos(a), 19*math.sin(a), "#4B357D", 0.65)
+            a=math.radians(k*72+15)
+            LN(0, 0, 24*math.cos(a), 17*math.sin(a), "#4B357D", 0.55)
         add('</g>')
-    # porous bone
-    P("M0,565 C55,535 105,558 154,546 C205,532 252,555 295,538 L295,670 L0,670 Z", fill="#F3DEC9", stroke="#D6B998", sw=1.0)
-    for i in range(54):
-        C(12+dr(i,10)*270, 580+dr(i,11)*75, 5+dr(i,12)*8, "#F8EEE5", "#D5B99B", 0.6)
-    # connector from pocket to zoom
-    R(141, 329, 21, 22, "none", "#263238", 1.0)
-    LN(141, 329, 91, 218, "#263238", 1.0, dash="5,4")
-    LN(162, 329, 214, 219, "#263238", 1.0, dash="5,4")
+    # magnified bacterium circle
+    C(175, 178, 92, "#F8FBFF", "#153B6E", 2.2)
+    for i in range(92):
+        C(100+dr(i,220)*150, 104+dr(i,221)*135, 1.5+dr(i,222)*1.4, ["#6C4CA5", "#2D78A6", "#B36D5C"][i%3], opacity=0.75)
+    for i in range(8):
+        bx=108+dr(i,225)*132; by=105+dr(i,226)*115; ang=-35+dr(i,227)*80
+        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f})">')
+        R(-29,-7,58,14,"url(#gPurp)","#4B357D",0.95,rx=7)
+        PELL(-12,-5,14,3.5,"#FFFFFF",opacity=0.30)
+        for k in range(8):
+            a=math.radians(k*45+10)
+            LN(0,0,32*math.cos(a),22*math.sin(a),"#4B357D",0.75)
+        add('</g>')
+    R(151, 333, 23, 24, "none", "#263238", 1.0)
+    LN(151,333,105,253,"#263238",1.0,dash="5,4"); LN(174,333,236,255,"#263238",1.0,dash="5,4")
+    txt(78, 94, "P. gingivalis", 13, "#111827", "start", "bold", "italic")
     group_end()
 
-    # virulence cargo callouts: white scientific inset boxes like the reference
+    # B. Virulence cargo station with original compact badge row.
     group_start("zone-b")
-    txt(355, 260, "gingipains/OMVs", 15, "#111827", "start", "bold")
-    R(305, 285, 190, 132, "#FFFFFF", "#2F3D52", 1.2, rx=6)
-    txt(400, 312, "gingipains", 12, "#111827")
-    for i, (nm, grad, col) in enumerate([("RgpA", "gBlue", "#2B5EA7"), ("RgpB", "gTeal", "#0C7A72"), ("Kgp", "gTom", "#D63426")]):
-        cx=345+i*55
-        P(f"M{cx-18},337 C{cx-5},320 {cx+20},326 {cx+20},345 C{cx+18},362 {cx-6},368 {cx-18},354 C{cx-8},350 {cx-8},342 {cx-18},337 Z", fill=f"url(#{grad})", stroke=col, sw=1.0)
-        txt(cx, 388, nm, 10, "#1F2B3A")
-    R(305, 430, 190, 126, "#FFFFFF", "#2F3D52", 1.2, rx=6)
-    txt(400, 457, "OMVs", 12, "#111827")
-    for i in range(7):
-        cx=333+i*24; cy=500 + (i%2)*15
-        C(cx, cy, 17, "#FFFFFF", "#5A50AA", 1.6)
-        C(cx, cy, 12, "#F7FBFF", "#8C82D8", 0.8, dash="2,2")
+    chip(370, 130, "b", "virulence cargo")
+    R(342, 155, 235, 190, "#FFFFFF", "#CAD6E2", 1.2, rx=14)
+    txt(459, 181, "gingipains", 11.5, "#1F2B3A", weight="bold")
+    for i,(nm,grad,col,mark) in enumerate([("RgpA","gBlue","#2B5EA7","R"),("RgpB","gTeal","#0C7A72","R"),("Kgp","gTom","#D63426","K")]):
+        cx=385+i*73
+        P(f"M{cx-23},213 C{cx-8},192 {cx+25},199 {cx+25},223 C{cx+22},244 {cx-9},251 {cx-24},234 C{cx-11},228 {cx-11},219 {cx-23},213 Z", fill=f"url(#{grad})", stroke=col, sw=1.0)
+        txt(cx, 228, mark, 12, "#FFFFFF", weight="bold")
+        txt(cx, 270, nm, 10, "#22324A")
+    LN(358, 293, 562, 293, "#E1E8EF", 1)
+    txt(459, 318, "outer-membrane vesicles", 11.5, "#1F2B3A", weight="bold")
+    for i in range(6):
+        cx=372+i*36; cy=365+(i%2)*14
+        C(cx, cy, 18, "#FFFFFF", "#5A50AA", 1.5)
+        C(cx, cy, 13, "#F7FBFF", "#8C82D8", 0.8, dash="2,2")
         for k,col in enumerate(["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"]):
-            C(cx-6+(k%2)*11, cy-5+(k//2)*9, 3.0, col)
+            C(cx-6+(k%2)*12, cy-5+(k//2)*10, 3.0, col)
+    txt(459, 425, "shape + letters provide redundant encoding", 8.5, "#6B7785")
     group_end()
 
-    # released cargo cloud and reference-style arrows
-    for i in range(36):
-        C(520+dr(i,20)*78, 340+dr(i,21)*190, 3.0+dr(i,22)*2.2, ["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"][i%4])
-    for i in range(5):
-        cx=535+dr(i,23)*55; cy=385+dr(i,24)*105
-        C(cx, cy, 14, "#FFFFFF", "#5A50AA", 1.1)
-        C(cx, cy, 9, "#F6FAFF", "#8C82D8", 0.7, dash="2,2")
-        C(cx-3, cy, 3, "#0C7A72"); C(cx+5, cy+2, 2.8, "#D63426")
-    ARROW(252, 445, 292, 445, "#526B82", 3.0, 7)
-    ARROW(505, 448, 584, 448, "#526B82", 3.0, 7)
-
+    # C. Vascular transit: horizontal, less reference-like and denser.
     group_start("zone-c")
-    blood_vessel(668, 200)
-    label(668, 540, "circulating OMVs, enzymes and cytokines", 8.2)
-    # add bolder center label and hide earlier small label issue by placing high on vessel
-    txt(668, 185, "bloodstream", 15, "#111827", weight="bold")
+    chip(650, 136, "c", "systemic spread")
+    SHAD(740, 436, 145, 12)
+    P("M585,255 C640,210 848,210 910,255 L890,470 C820,510 646,510 585,470 Z", fill="#FAD2D4", stroke="#CD6871", sw=1.2)
+    P("M596,267 C650,235 835,235 897,267 L880,458 C810,486 662,486 600,456 Z", fill="#F8B7BA", stroke="#E4868D", sw=0.8, opacity=0.88)
+    for i in range(11):
+        ex=626+dr(i,240)*235; ey=285+dr(i,241)*160
+        add(f'<g transform="translate({ex:.1f},{ey:.1f}) rotate({-25+dr(i,242)*50:.1f})">')
+        EL(0,0,14,10,"url(#gRed)","#B5312B",1.0)
+        EL(0,0,7,4,"#E95C4D",None,opacity=0.55)
+        add('</g>')
+    for i in range(6):
+        C(648+dr(i,245)*220, 300+dr(i,246)*138, 13, "#EFF3FC", "#9CADC7", 0.9)
+        C(648+dr(i,245)*220, 300+dr(i,246)*138, 4, "#9BAFD3")
+    txt(740, 526, "OMVs, gingipains and cytokines circulate with immune cells", 8.8, "#65717F")
     group_end()
-    ARROW(730, 448, 767, 448, "#526B82", 3.0, 7)
 
+    # D. Neurovascular unit / BBB: integrated barrier with astrocytes and leakage.
     group_start("zone-d")
-    bbb(805, 200)
-    label(805, 540, "tight-junction gate + astrocyte endfeet", 8.2)
-    txt(805, 185, "BBB", 15, "#111827", weight="bold")
+    chip(830, 126, "d", "BBB stress")
+    R(892, 180, 62, 330, "#FFF2F4", "#D77C87", 1.2, rx=18)
+    for i in range(8):
+        R(902, 194+i*38, 42, 26, "#F7B8C0", "#BD6975", 0.8, rx=8)
+        LN(904, 207+i*38, 942, 207+i*38, "#E57885", 1.0)
+    for i in range(7):
+        R(918, 225+i*39, 16, 7, "#1D5F9F", "#153B6E", 0.6, rx=2)
+    for i in range(7):
+        yy=205+i*43
+        LN(960, yy, 1028, yy-28, "#2E83A4", 1.4)
+        LN(1000, yy-16, 1038, yy-48, "#2E83A4", 1.1)
+        LN(1001, yy-16, 1041, yy+4, "#2E83A4", 1.1)
+    for i in range(22):
+        C(856+dr(i,250)*85, 295+dr(i,251)*130, 3.0+dr(i,252)*1.9, ["#2B5EA7", "#0C7A72", "#D63426"][i%3])
+    txt(923, 535, "tight junctions + astrocyte endfeet", 8.8, "#65717F")
     group_end()
-    ARROW(858, 448, 900, 448, "#526B82", 3.0, 7)
-    for i in range(18):
-        C(878+dr(i,30)*70, 393+dr(i,31)*92, 3.2+dr(i,32)*1.4, ["#2B5EA7", "#0C7A72", "#D63426"][i%3])
 
+    # E/F. AD pathology hub: one dense right-side editorial panel, not copied.
     group_start("zone-e")
-    brain_icon(1040, 230)
-    label(1040, 540, "neuroinflammation and proteinopathy", 8.2)
-    # improve anatomy contrast on top of existing brain
-    P("M943,375 C990,337 1067,333 1118,374", fill="none", stroke="#8FA0B8", sw=1.3)
-    P("M970,425 C1015,393 1080,390 1130,420", fill="none", stroke="#C0CAD8", sw=1.1)
-    txt(1035, 190, "brain", 15, "#111827", weight="bold")
-    R(1120, 330, 22, 22, "none", "#1F385C", 1.2)
+    chip(1085, 116, "e", "brain pathology hub")
+    # brain silhouette as context
+    brain_icon(1150, 205)
+    # neuron network panel
+    R(1242, 95, 292, 230, "#FBFDFF", "#153B6E", 1.8, rx=12)
+    txt(1388, 125, "neuron injury", 12, "#111827", weight="bold")
+    C(1330, 205, 34, "url(#gSky)", "#1F6F9B", 1.2); C(1330, 205, 9, "#2F739F")
+    for ang in [-160,-120,-78,-35,15,55,92,135]:
+        x2=1330+72*math.cos(math.radians(ang)); y2=205+72*math.sin(math.radians(ang))
+        LN(1330,205,x2,y2,"#1F6F9B",2.0)
+        LN(x2,y2,x2+22*math.cos(math.radians(ang+28)),y2+22*math.sin(math.radians(ang+28)),"#1F6F9B",1.1)
+        LN(x2,y2,x2+20*math.cos(math.radians(ang-26)),y2+20*math.sin(math.radians(ang-26)),"#1F6F9B",1.1)
+    # amyloid plaque and tau
+    cx,cy=1458,186
+    for k in range(32):
+        a=math.radians(k*360/32); LN(cx,cy,cx+31*math.cos(a),cy+31*math.sin(a),"#9B6B2E",0.8)
+    C(cx,cy,23,"url(#gGold)","#8B5D28",1.0)
+    txt(1473, 146, "amyloid-β", 9.5, "#3B2A19"); txt(1473, 160, "plaques", 9.5, "#3B2A19")
+    for k in range(5):
+        x0=1422+dr(k,260)*72; y0=256+dr(k,261)*32
+        P(f"M{x0:.1f},{y0:.1f} c10,-11 17,8 28,-2 c8,-8 16,7 25,-2", fill="none", stroke="#5F3D9A", sw=1.2)
+    txt(1466, 254, "tau fragments", 9.5, "#3B2A5A")
+    # AChE-Aβ nucleation as hero inset
+    R(1218, 350, 316, 270, "#FBFDFF", "#153B6E", 1.8, rx=12)
+    txt(1376, 380, "AChE-Aβ nucleation", 12, "#111827", weight="bold")
+    for i in range(72):
+        ang=dr(i,270)*2*math.pi; rad=dr(i,271)**0.5*80
+        sx=1364+math.cos(ang)*rad*1.08; sy=485+math.sin(ang)*rad*0.80
+        C(sx, sy, 10+dr(i,272)*4.2, "url(#gSteel)", "#98A8BC", 0.5)
+    for i in range(13): C(1304+dr(i,275)*58, 425+dr(i,276)*42, 13.5, "url(#gTeal)", "#0C7A72", 0.6)
+    for i in range(11): C(1350+dr(i,280)*62, 522+dr(i,281)*38, 13.5, "url(#gAmber)", "#D98A25", 0.6)
+    P("M1370,455 C1405,430 1425,466 1454,445 C1475,430 1495,428 1522,408", fill="none", stroke="#E64B35", sw=4.2, cap="round")
+    P("M1370,455 C1405,430 1425,466 1454,445 C1475,430 1495,428 1522,408", fill="none", stroke="#FFD6C9", sw=1.7, cap="round")
+    txt(1276, 428, "PAS", 10, "#0C7A72", "start", weight="bold"); ARROW(1300,430,1322,442,"#0C7A72",1.3,4)
+    txt(1464, 428, "Aβ peptide", 10, "#B82E26", "start", weight="bold"); ARROW(1512,430,1496,438,"#B82E26",1.3,4)
+    txt(1248, 580, "residues 344-361", 9.5, "#9A6119", "start"); ARROW(1335,570,1360,535,"#9A6119",1.3,4)
+    for px,py in [(1390,474),(1412,464),(1434,480)]: LN(px,py,1380,522,"#263238",1.0,dash="3,3")
+    R(1168, 315, 23, 23, "none", "#1F385C", 1.1)
+    LN(1191,315,1242,142,"#1F385C",1.0,dash="5,4"); LN(1191,338,1218,455,"#1F385C",1.0,dash="5,4")
     group_end()
-    LN(1142, 330, 1238, 125, "#1F385C", 1.0, dash="5,4")
-    LN(1142, 352, 1238, 455, "#1F385C", 1.0, dash="5,4")
 
-    group_start("zone-f")
-    neuron_callout(1238, 50)
-    ache_ab_callout(1238, 330)
-    group_end()
-
-    # ---------- bottom evidence strip ----------
+    # G. Evidence ribbon: compact but denser and visually aligned.
     group_start("zone-g")
-    R(14, 700, 1532, 262, "#FBFDFF", "#153B6E", 1.6, rx=10)
-    method_transcriptomics(185, 815)
-    LN(438, 733, 438, 925, "#AEB9C5", 1.2)
-    method_docking(620, 815)
-    LN(805, 733, 805, 925, "#AEB9C5", 1.2)
-    method_md(970, 815)
+    R(28, 720, 1504, 252, "#FBFDFF", "#153B6E", 1.5, rx=14)
+    chip(58, 750, "f", "orthogonal evidence", "#153B6E")
+    method_transcriptomics(200, 845)
+    LN(450, 755, 450, 925, "#AEB9C5", 1.2)
+    method_docking(630, 845)
+    LN(825, 755, 825, 925, "#AEB9C5", 1.2)
+    method_md(995, 845)
+    # small checklist for evidence convergence
+    R(1335, 790, 145, 95, "#FFFFFF", "#D2DDE8", 1.0, rx=8)
+    for i,(t,col) in enumerate([("DEGs", "#0C7A72"),("binding", "#E64B35"),("1 µs stable", "#153B6E")]):
+        C(1353, 815+i*24, 6, col); txt(1366, 819+i*24, t, 9.2, "#4D5B68", "start")
     group_end()
 
-    # caption: journal format, two lines, unobtrusive
+    # Caption: full two-line journal format.
     txt(34, 1034, "Figure 1 |", 10.5, "#37474F", "start", "bold")
-    txt(98, 1034, "P. gingivalis-driven periodontal-to-brain mechanisms in Alzheimer\'s disease.", 10.5, "#5A6B7A", "start")
-    txt(34, 1050, "Gingipains and OMVs disseminate through blood and BBB interfaces, linking infection to neuronal injury and AChE-Aβ nucleation.", 9.0, "#7F8A96", "start")
+    txt(98, 1034, "An oral infection-to-neurodegeneration axis driven by P. gingivalis virulence cargo.", 10.5, "#5A6B7A", "start")
+    txt(34, 1050, "Gingipains, OMVs and cytokines connect periodontal biofilms to BBB stress, neuronal injury and AChE-Aβ nucleation.", 9.0, "#7F8A96", "start")
     add('</svg>')
     out.write_text("\n".join(L), encoding="utf-8")
 
