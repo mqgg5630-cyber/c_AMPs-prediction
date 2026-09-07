@@ -94,3 +94,41 @@ N=100 bash amp_pipeline/test_models.sh  # 前 100 条
 | BERT 报 tokenizer 无法解析 | 首次需联网下载 `bert-base-uncased` vocab；离线时把 `vocab.txt` 放到 `Models/bert-base-uncased/` |
 | mamba 下载 cudatoolkit/cudnn 报 `Download error (56)` / `unexpected eof` | 镜像对大包断线。脚本已改为 `wget -c` 断点续传预下载，**直接重跑 `setup_envs.sh tf` 即可续传** |
 | conda 解析 tf-gpu 1.14 很慢 | `conda install -n base mamba -c conda-forge`，脚本会自动改用 mamba |
+
+## 八、大规模分组库 (33 GB) 的正式运行 —— 用 `run_unique_pipeline.sh`
+
+不要直接对 33 GB 跑 `run_pipeline_all_groups.sh`：四个队列是对同一批 MAG 的不同切分，同一条肽段会被三个模型重复算 3~4 遍；
+`format.pl` 还会把每条序列膨胀成 300 列 CSV（几百 GB 中间文件）；原 BERT 脚本 tokenizer 是纯 Python，GPU 利用率不到 20%。
+
+`amp_pipeline/run_unique_pipeline.sh` 的做法：全局去重一次 → 三个模型各只预测一遍唯一序列 → `join` 回填到每个分组 → 汇总。
+全流程断点续跑（Ctrl+C / 断电后重跑同一命令即可接着算）。
+
+### 1) 数据放哪
+`/mnt/e/...` 是 Windows NTFS 经 9P 协议挂载，顺序读大文件大约 100~300 MB/s，随机/小文件极慢。
+本 pipeline 只**顺序读一遍**分组 FASTA，所以直接读 `/mnt/e` 也可以；但如果 WSL 所在磁盘空间够（需 ≥ 40 GB），
+拷进 WSL 的 ext4 会更稳、`sort` 也更快：
+
+```bash
+mkdir -p ~/data && rsync -ah --info=progress2 /mnt/e/0yzy-ad/comparable_sorf_grouped_catalog ~/data/
+```
+
+### 2) 先测速 (5~10 分钟)，拿到全量预估时间
+```bash
+bash amp_pipeline/run_unique_pipeline.sh ~/data/comparable_sorf_grouped_catalog amp_results bench
+```
+会抽 20 万条唯一序列跑三模型，打印 条/s 和「若唯一序列占 25%/50%/100% 时的预估小时数」。
+
+### 3) 正式后台运行
+```bash
+nohup bash amp_pipeline/run_unique_pipeline.sh ~/data/comparable_sorf_grouped_catalog amp_results > run_unique.log 2>&1 &
+tail -f run_unique.log          # 每 10 秒打印进度 / 条每秒 / 剩余小时
+```
+结果：`amp_results/results/amp_summary.tsv`（分组汇总）、`amp_results/results/amp_all_peptides.tsv`（全部肽段）、
+`amp_results/results/<Cohort>/<group>/aggregated_results.tsv`（每组明细）。
+
+### 4) 一致性校验（可选）
+```bash
+bash amp_pipeline/verify_unique_vs_original.sh 200
+```
+用 200 条已知 AMP 对比快速路径与原始脚本的概率：Attention/LSTM 应完全一致；BERT fp16 有 1e-3 级误差属正常，
+若想完全一致可 `BERT_FP16=0`（慢约 1.5~2 倍）。
