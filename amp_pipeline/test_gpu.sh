@@ -43,7 +43,8 @@ echo "=================================================="
 if [ ! -x "$ENV_TF/bin/python" ]; then
     bad "找不到 $ENV_TF/bin/python, 请先运行 setup_envs.sh tf"
 else
-    "$ENV_TF/bin/python" - "$PROJECT_DIR" <<'PY'
+    # WSL 内核无 NUMA, TF 会刷 "could not open file to read NUMA node" (无害), 这里过滤掉
+    "$ENV_TF/bin/python" - "$PROJECT_DIR" 2> >(grep -v -i "numa" >&2) <<'PY'
 import os, sys, time
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
 project = sys.argv[1]
@@ -82,7 +83,7 @@ for name, kw in (("att.h5", {"custom_objects": {"Attention_layer": Attention_lay
     y = m.predict(x, batch_size=8)
     print("  [PASS] %s 加载并前向成功, 输入 %s -> 输出 %s" % (name, m.input_shape, y.shape))
 PY
-    if [ $? -eq 0 ]; then ok "camps-tf114 GPU 测试通过"; else bad "camps-tf114 GPU 测试失败"; fi
+    if [ ${PIPESTATUS[0]} -eq 0 ]; then ok "camps-tf114 GPU 测试通过"; else bad "camps-tf114 GPU 测试失败"; fi
 fi
 
 echo ""

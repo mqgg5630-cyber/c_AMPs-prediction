@@ -87,6 +87,22 @@ prefetch_pkg() {   # prefetch_pkg <filename>
     return 1
 }
 
+# pip 多索引源回退: 用户默认源 -> 阿里云 -> 官方 PyPI (某些镜像会返回 "from versions: none")
+PIP_INDEXES=("" "https://mirrors.aliyun.com/pypi/simple" "https://pypi.org/simple")
+pip_install() {  # pip_install <python> <pkgs...>
+    local py="$1"; shift
+    local idx
+    for idx in "${PIP_INDEXES[@]}"; do
+        if [ -n "$idx" ]; then
+            echo "  [pip] 换索引源: $idx"
+            "$py" -m pip install --timeout 120 --retries 5 -i "$idx" "$@" && return 0
+        else
+            "$py" -m pip install --timeout 120 --retries 5 "$@" && return 0
+        fi
+    done
+    return 1
+}
+
 # mamba/conda create 加重试 (小包偶发断线)
 retry() {  # retry <n> <cmd...>
     local n="$1"; shift
@@ -134,7 +150,12 @@ install_tf() {
     PY_TF="$CONDA_BASE/envs/$ENV_TF_NAME/bin/python"
     [ -x "$PY_TF" ] || { echo "[错误] 环境创建失败, 未找到 $PY_TF"; exit 1; }
     # keras 2.2.4 走 pip (conda 版本会拉高依赖); 固定 h5py<3 否则 load_model 报 'str' has no attribute 'decode'
-    retry 3 "$PY_TF" -m pip install --timeout 120 --retries 10 "keras==2.2.4" "h5py==2.10.0" "numpy<1.17" "protobuf<3.21" "scipy<1.6"
+    if ! "$PY_TF" -c "import keras" 2>/dev/null; then
+        # 优先 conda (defaults 有 keras 2.2.4 py36 版, 与 conda 装的 h5py 2.10 / numpy 1.16 完全匹配)
+        retry 2 $SOLVER install -n "$ENV_TF_NAME" -y "keras=2.2.4" -c defaults \
+        || pip_install "$PY_TF" "keras==2.2.4"
+    fi
+    "$PY_TF" -c "import keras" || { echo "[错误] keras 安装失败"; exit 1; }
     echo " ---- $ENV_TF_NAME 版本核对 ----"
     "$PY_TF" - <<'PY'
 import tensorflow as tf, keras, h5py, numpy
@@ -156,12 +177,14 @@ install_bert() {
     [ -x "$PY_BERT" ] || { echo "[错误] 环境创建失败, 未找到 $PY_BERT"; exit 1; }
     # torch 1.10.1 是最后一个支持 py3.6 的版本, cu113 内置 sm_75 (GTX 1650)
     # torch+cu113 约 1.8GB, 加超时/重试; 断线可直接重跑本脚本 (bert)
-    retry 3 "$PY_BERT" -m pip install --timeout 120 --retries 10 torch==1.10.1+cu113 \
-        --extra-index-url https://download.pytorch.org/whl/cu113
-    retry 3 "$PY_BERT" -m pip install --timeout 120 --retries 10 "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
+    if ! "$PY_BERT" -c "import torch" 2>/dev/null; then
+        pip_install "$PY_BERT" torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113 \
+        || pip_install "$PY_BERT" torch==1.10.1+cu113 -f https://download.pytorch.org/whl/torch_stable.html
+    fi
+    pip_install "$PY_BERT" "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
         boto3 requests regex tqdm "pytorch_pretrained_bert==0.6.1"
     # 安装仓库自带的 bert_sklearn (可编辑模式, 改代码即时生效)
-    "$PY_BERT" -m pip install -e "$PROJECT_DIR/bert_sklearn"
+    pip_install "$PY_BERT" -e "$PROJECT_DIR/bert_sklearn"
     echo " ---- $ENV_BERT_NAME 版本核对 ----"
     "$PY_BERT" - <<'PY'
 import torch, sklearn, numpy, bert_sklearn, pytorch_pretrained_bert
