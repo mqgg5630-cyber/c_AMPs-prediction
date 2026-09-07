@@ -162,6 +162,11 @@ BERT_NEED="$WORK/bert_needed.txt"
 BERT_NEED_OUT="$WORK/bert_needed_proba.tsv"
 GPU_LOG="$WORK/gpu_util.log"
 if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
+    # 级联模式与上次不同 -> 旧的 BERT 输出作废
+    if [ -f "$BERT_NEED.mode" ] && [ "$(cat "$BERT_NEED.mode")" != "$BERT_CASCADE" ]; then
+        LOG "      级联模式由 $(cat "$BERT_NEED.mode") 改为 $BERT_CASCADE, 重新生成 BERT 输入"
+        rm -f "$BERT_NEED" "$BERT_NEED.done" "$BERT_NEED.mode" "$BERT_NEED_OUT" "$BERT_OUT" "$BERT_OUT.done"
+    fi
     if [ "$(count_lines "$BERT_OUT")" -ge "$N_UNIQ" ] && [ "$N_UNIQ" -gt 0 ] && [ -f "$BERT_OUT.done" ]; then
         LOG "[3/5] BERT 结果已完整 ($N_UNIQ 条), 跳过"
     else
