@@ -139,6 +139,8 @@
 <ellipse cx="441.3" cy="328.2" rx="1.8" ry="11.9" fill="#FFFFFF" fill-opacity="0.65"/>
 <text x="434.0" y="366.0" font-size="8" fill="#7F8A96" text-anchor="middle">peptides</text>
 <text x="434.0" y="394.0" font-size="8" fill="#B7C0CA" text-anchor="middle">(validated)</text>
+<path d="M410.0,376.0 a24.0,4.0 0 1 0 48.0,0 a24.0,4.0 0 1 0 -48.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M419.6,376.0 a14.4,2.4 0 1 0 28.8,0 a14.4,2.4 0 1 0 -28.8,0 Z" fill="#31506B" fill-opacity="0.06"/>
 </g>
 <g id="zone-b">
 <circle cx="530.0" cy="180.0" r="5" fill="url(#gRed)"/>
@@ -298,6 +300,15 @@
 <line x1="978.0" y1="221.0" x2="1007.8" y2="221.0" stroke="#5CA83C" stroke-width="2" stroke-linecap="round"/>
 <line x1="978.0" y1="230.0" x2="1005.8" y2="230.0" stroke="#F0A63C" stroke-width="2" stroke-linecap="round"/>
 <line x1="978.0" y1="239.0" x2="1015.5" y2="239.0" stroke="#7A63B8" stroke-width="2" stroke-linecap="round"/>
+<path d="M950,427 C950,412 906,408 866,404" fill="none" stroke="#8C99A6" stroke-width="1.6"/>
+<ellipse cx="950.0" cy="448.0" rx="15.0" ry="21.0" fill="url(#gGray)" stroke="#8C99A6" stroke-width="1.4"/>
+<line x1="950.0" y1="433.0" x2="950.0" y2="443.0" stroke="#8C99A6" stroke-width="1.2" stroke-linecap="round"/>
+<circle cx="950.0" cy="448.0" r="1.8" fill="#8C99A6"/>
+<ellipse cx="945.0" cy="440.0" rx="3.5" ry="6.0" fill="#FFFFFF" fill-opacity="0.5"/>
+<path d="M904.0,192.0 a28.0,4.0 0 1 0 56.0,0 a28.0,4.0 0 1 0 -56.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M915.2,192.0 a16.8,2.4 0 1 0 33.6,0 a16.8,2.4 0 1 0 -33.6,0 Z" fill="#31506B" fill-opacity="0.06"/>
+<path d="M972.0,250.0 a30.0,4.0 0 1 0 60.0,0 a30.0,4.0 0 1 0 -60.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M984.0,250.0 a18.0,2.4 0 1 0 36.0,0 a18.0,2.4 0 1 0 -36.0,0 Z" fill="#31506B" fill-opacity="0.06"/>
 <ellipse cx="921.8" cy="146.9" rx="14.3" ry="11.6" fill="url(#gPink2)" stroke="#C64F82" stroke-width="1.4"/>
 <ellipse cx="942.9" cy="145.2" rx="13.6" ry="10.2" fill="url(#gPink2)" stroke="#C64F82" stroke-width="1.4"/>
 <ellipse cx="932.0" cy="155.4" rx="17.0" ry="12.9" fill="url(#gPink2)" stroke="#C64F82" stroke-width="1.4"/>
@@ -382,6 +393,10 @@
 <path d="M1391.6,155.5 a1.3,0.9 0 1 0 2.7,0 a1.3,0.9 0 1 0 -2.7,0 Z" fill="#FFFFFF" fill-opacity="0.5"/>
 <line x1="1356.0" y1="150.0" x2="1402.7" y2="133.8" stroke="#E64B35" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3,2"/>
 <text x="1356.0" y="222.0" font-size="8" fill="#7F8A96" text-anchor="middle">hydrophobic moment</text>
+<path d="M1100.0,182.0 a78.0,7.0 0 1 0 156.0,0 a78.0,7.0 0 1 0 -156.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M1131.2,182.0 a46.8,4.2 0 1 0 93.6,0 a46.8,4.2 0 1 0 -93.6,0 Z" fill="#31506B" fill-opacity="0.06"/>
+<path d="M1310.0,214.0 a46.0,6.0 0 1 0 92.0,0 a46.0,6.0 0 1 0 -92.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M1328.4,214.0 a27.6,3.6 0 1 0 55.2,0 a27.6,3.6 0 1 0 -55.2,0 Z" fill="#31506B" fill-opacity="0.06"/>
 <path d="M1230.0,408.0 a70.0,6.0 0 1 0 140.0,0 a70.0,6.0 0 1 0 -140.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
 <path d="M1258.0,408.0 a42.0,3.6 0 1 0 84.0,0 a42.0,3.6 0 1 0 -84.0,0 Z" fill="#31506B" fill-opacity="0.06"/>
 <path d="M1180.0,300 Q1300,308 1420.0,300 L1341.0,404 Q1300,414 1259.0,404 Z" fill="url(#gFun)" stroke="#3FA79A" stroke-width="1.6" stroke-linejoin="round"/>
@@ -422,6 +437,7 @@
 <path d="M1325.6,439.6 a2.4,1.4 0 1 0 4.8,0 a2.4,1.4 0 1 0 -4.8,0 Z" fill="#FFFFFF" fill-opacity="0.65"/>
 <polygon points="1344.0,452.0 1345.6,455.8 1349.7,456.1 1346.6,458.8 1347.5,462.9 1344.0,460.7 1340.5,462.9 1341.4,458.8 1338.3,456.1 1342.4,455.8" fill="url(#gGold)" stroke="#C98F0A" stroke-width="0.8" stroke-linejoin="round"/>
 <path d="M1340.7,456.2 a1.8,1.1 0 1 0 3.6,0 a1.8,1.1 0 1 0 -3.6,0 Z" fill="#FFFFFF" fill-opacity="0.65"/>
+<path d="M1362,428 L1362.96,431.04 L1366,432 L1362.96,432.96 L1362,436 L1361.04,432.96 L1358,432 L1361.04,431.04 Z" fill="#E8B31A" stroke="#37474F" stroke-width="1" fill-opacity="1"/>
 </g>
 <g id="zone-d">
 <path d="M1131.2,778.2 a74.8,10.0 0 1 0 149.6,0 a74.8,10.0 0 1 0 -149.6,0 Z" fill="#31506B" fill-opacity="0.09"/>
@@ -519,6 +535,8 @@
 <path d="M-3,10 L3,10 L1.6,34 L-1.6,34 Z" fill="#FFFFFF" stroke="#9FB0C0" stroke-width="1"/>
 </g>
 <text x="1456.0" y="944.0" font-size="8.5" fill="#7F8A96" text-anchor="middle">confirm</text>
+<path d="M1436.0,912.0 a20.0,4.0 0 1 0 40.0,0 a20.0,4.0 0 1 0 -40.0,0 Z" fill="#31506B" fill-opacity="0.09"/>
+<path d="M1444.0,912.0 a12.0,2.4 0 1 0 24.0,0 a12.0,2.4 0 1 0 -24.0,0 Z" fill="#31506B" fill-opacity="0.06"/>
 </g>
 <g id="zone-e">
 <path d="M559.3,666.0 a40.7,5.0 0 1 0 81.4,0 a40.7,5.0 0 1 0 -81.4,0 Z" fill="#31506B" fill-opacity="0.09"/>
