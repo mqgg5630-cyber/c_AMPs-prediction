@@ -430,7 +430,10 @@ class BaseBertEstimator(BaseEstimator):
         """
 
         print("Loading model from %s..."%(restore_file))
-        state = torch.load(restore_file)
+        # Models trained on GPU are commonly serialized with CUDA tensors.
+        # Allow the same checkpoint to be loaded by the CPU-only fallback.
+        map_location = None if torch.cuda.is_available() else torch.device('cpu')
+        state = torch.load(restore_file, map_location=map_location)
 
         params = state['params']
 
@@ -659,7 +662,10 @@ def load_model(filename):
     """
     Load BertClassifier or BertRegressor from a disk file.
     """
-    state = torch.load(filename)
+    # Models trained on GPU are commonly serialized with CUDA tensors.
+    # Allow the same checkpoint to be loaded by the CPU-only fallback.
+    map_location = None if torch.cuda.is_available() else torch.device('cpu')
+    state = torch.load(filename, map_location=map_location)
     class_name = state['class_name']
 
     classes = {
