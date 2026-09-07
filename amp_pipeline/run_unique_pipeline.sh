@@ -29,6 +29,10 @@
 #   BERT_EVAL_BATCH_SIZE=256  BERT_MAX_SEQ_LENGTH=66  BERT_FP16=1
 #   TF_PREDICT_BATCH_SIZE=1024 TF_CHUNK_SIZE=50000
 #   BENCH_N=200000   SKIP_TOTAL=1 (跳过 sORF_All_Total.fa)   SORT_MEM=40% (sort 可用内存)
+#   BERT_CASCADE=1   级联模式 (默认开): BERT 只跑 "Attention 或 LSTM 至少一个 >0.5" 的序列。
+#                    最终 is_AMP(3票) / is_AMP_flex(>=2票) 与全量跑 BERT 完全一致, 只是两票皆否的
+#                    序列 bert_prob 记为 NA。GTX 1650 上 BERT 仅 ~80 条/s, 级联可把 BERT 工作量砍掉 90%+。
+#                    BERT_CASCADE=0 则全量跑 BERT。
 # ==============================================================================
 set -e
 set -o pipefail
@@ -42,6 +46,7 @@ MODE="${3:-full}"
 STEP="${STEP:-all}"
 SKIP_TOTAL="${SKIP_TOTAL:-1}"
 BENCH_N="${BENCH_N:-200000}"
+BERT_CASCADE="${BERT_CASCADE:-1}"
 SORT_MEM="${SORT_MEM:-40%}"
 
 CONDA_BASE="$(conda info --base 2>/dev/null || true)"
@@ -51,7 +56,7 @@ ENV_BERT="${ENV_BERT:-$CONDA_BASE/envs/py36}"
 PY_TF="$ENV_TF/bin/python"
 PY_BERT="$ENV_BERT/bin/python"
 
-export BERT_EVAL_BATCH_SIZE="${BERT_EVAL_BATCH_SIZE:-256}"
+export BERT_EVAL_BATCH_SIZE="${BERT_EVAL_BATCH_SIZE:-512}"
 export BERT_MAX_SEQ_LENGTH="${BERT_MAX_SEQ_LENGTH:-66}"
 export BERT_FP16="${BERT_FP16:-1}"
 export BERT_USE_CUDA="${BERT_USE_CUDA:-auto}"
@@ -94,6 +99,7 @@ echo " 输出目录 : $OUT_DIR"
 echo " 模式     : $MODE   STEP=$STEP"
 echo " BERT     : batch=$BERT_EVAL_BATCH_SIZE max_len=$BERT_MAX_SEQ_LENGTH fp16=$BERT_FP16"
 echo " Keras    : batch=$TF_PREDICT_BATCH_SIZE chunk=$TF_CHUNK_SIZE"
+echo " 级联     : BERT_CASCADE=$BERT_CASCADE $([ "$BERT_CASCADE" = 1 ] && echo '(BERT 只跑 att/lstm 至少一票的序列)')"
 echo "=================================================="
 
 UNIQ="$WORK/unique_seqs.txt"
@@ -144,17 +150,52 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "keras" ]; then
 fi
 
 # ============================================================
-# [3] BERT
+# [3] BERT  (级联: 只跑需要 BERT 才能定论的序列)
 # ============================================================
+BERT_NEED="$WORK/bert_needed.txt"
+BERT_NEED_OUT="$WORK/bert_needed_proba.tsv"
+GPU_LOG="$WORK/gpu_util.log"
 if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
-    if [ "$(count_lines "$BERT_OUT")" -ge "$N_UNIQ" ] && [ "$N_UNIQ" -gt 0 ]; then
+    if [ "$(count_lines "$BERT_OUT")" -ge "$N_UNIQ" ] && [ "$N_UNIQ" -gt 0 ] && [ -f "$BERT_OUT.done" ]; then
         LOG "[3/5] BERT 结果已完整 ($N_UNIQ 条), 跳过"
     else
-        LOG "[3/5] BERT 预测 $N_UNIQ 条 (py36, GPU) ..."
+        [ "$(count_lines "$KERAS_OUT")" -ge "$N_UNIQ" ] || { echo "[错误] 需先完成 Keras 步骤"; exit 1; }
+        if [ "$BERT_CASCADE" = "1" ]; then
+            if [ ! -f "$BERT_NEED.done" ]; then
+                paste "$UNIQ" "$KERAS_OUT" | awk -F'\t' '$2!="NA" && ($2>0.5 || $3>0.5){print $1}' > "$BERT_NEED"
+                touch "$BERT_NEED.done"
+            fi
+            BERT_INPUT="$BERT_NEED"
+        else
+            BERT_INPUT="$UNIQ"
+        fi
+        N_BERT=$(count_lines "$BERT_INPUT")
+        LOG "[3/5] BERT 预测 $N_BERT 条 (占唯一序列 $(awk -v a="$N_BERT" -v b="$N_UNIQ" 'BEGIN{printf "%.2f", (b?100*a/b:0)}')%) (py36, GPU) ..."
+        # 后台每 30s 采样一次 GPU 利用率, 便于诊断
+        if command -v nvidia-smi >/dev/null 2>&1; then
+            ( while true; do echo "$(date '+%T') $(nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw,clocks.sm --format=csv,noheader)"; sleep 30; done ) >> "$GPU_LOG" 2>/dev/null &
+            GPU_PID=$!
+        fi
         t0=$(date +%s)
-        (cd "$PROJECT_DIR/script" && "$PY_BERT" predict_bert_unique.py "$UNIQ" "$BERT_OUT" "$N_UNIQ" 2> >(grep -v "apex\|^$" >&2))
+        if [ "$N_BERT" -gt 0 ]; then
+            (cd "$PROJECT_DIR/script" && "$PY_BERT" predict_bert_unique.py "$BERT_INPUT" "$BERT_NEED_OUT" "$N_BERT" 2> >(grep -v "apex\|^$" >&2))
+        else
+            : > "$BERT_NEED_OUT"
+        fi
+        [ -n "${GPU_PID:-}" ] && kill "$GPU_PID" 2>/dev/null || true
         BERT_SEC=$(( $(date +%s) - t0 ))
+        # 对齐回全部唯一序列: 未跑 BERT 的记 NA (UNIQ 与 BERT_INPUT 均为 C 序排序)
+        if [ "$BERT_CASCADE" = "1" ]; then
+            paste "$BERT_INPUT" "$BERT_NEED_OUT" > "$WORK/.need_p"
+            join -t $'\t' -a1 -e NA -o 2.2 "$UNIQ" "$WORK/.need_p" > "$BERT_OUT"
+            rm -f "$WORK/.need_p"
+        else
+            cp "$BERT_NEED_OUT" "$BERT_OUT"
+        fi
+        [ "$(count_lines "$BERT_OUT")" -eq "$N_UNIQ" ] || { echo "[错误] BERT 对齐后行数 $(count_lines "$BERT_OUT") != $N_UNIQ"; exit 1; }
+        touch "$BERT_OUT.done"
         LOG "      BERT 用时 $BERT_SEC s"
+        [ -s "$GPU_LOG" ] && LOG "      GPU 利用率采样 (util, mem, power, sm_clock) 最近 5 条:" && tail -5 "$GPU_LOG" | sed 's/^/        /'
     fi
 fi
 
@@ -168,17 +209,28 @@ if [ "$MODE" = "bench" ]; then
     echo "=================================================="
     KERAS_SEC="${KERAS_SEC:-0}"; BERT_SEC="${BERT_SEC:-0}"
     [ "$KERAS_SEC" -gt 0 ] && echo "  Attention+LSTM : $KERAS_SEC s  => $(( N_UNIQ / KERAS_SEC )) 条/s"
-    [ "$BERT_SEC" -gt 0 ]  && echo "  BERT           : $BERT_SEC s  => $(( N_UNIQ / BERT_SEC )) 条/s"
+    N_BERT="${N_BERT:-$N_UNIQ}"
+    [ "$BERT_SEC" -gt 0 ]  && echo "  BERT           : $BERT_SEC s  => $(( N_BERT / BERT_SEC )) 条/s  (实际跑了 $N_BERT 条)"
     echo ""
-    echo "  估算全量唯一序列数 (只数 '>' 行, 未去重, 是上限):"
+    echo "  序列长度分布 (唯一序列):"
+    awk '{print length($0)}' "$UNIQ" | sort -n | awk '{a[NR]=$1} END{printf "    n=%d  中位数=%d  P90=%d  P99=%d  最大=%d  >64AA占比=%.1f%%\n", NR, a[int(NR*0.5)], a[int(NR*0.9)], a[int(NR*0.99)], a[NR], 0}' 
+    awk '{if(length($0)>64)c++} END{printf "    >64 AA 的序列占 %.2f%% (BERT_MAX_SEQ_LENGTH=66 时这些会被截断到 64 AA)\n", NR?100*c/NR:0}' "$UNIQ"
+    echo ""
+    NEED_PCT=$(awk -v a="$N_BERT" -v b="$N_UNIQ" 'BEGIN{printf "%.2f", (b?100*a/b:0)}')
+    echo "  级联比例: att/lstm 至少一票 >0.5 的序列占唯一序列的 ${NEED_PCT}%  (= 需要 BERT 的比例)"
+    echo ""
+    echo "  估算全量:"
     TOTAL_RECS=$(cat "${GROUP_FAS[@]}" | grep -c '^>' || echo 0)
     echo "    分组记录总数(含跨队列重复) = $TOTAL_RECS"
-    if [ "$BERT_SEC" -gt 0 ]; then
-        rate_b=$(( N_UNIQ / BERT_SEC )); rate_k=$(( N_UNIQ / (KERAS_SEC>0?KERAS_SEC:1) ))
+    if [ "$BERT_SEC" -gt 0 ] && [ "$N_BERT" -gt 0 ]; then
+        rate_b=$(( N_BERT / BERT_SEC )); rate_k=$(( N_UNIQ / (KERAS_SEC>0?KERAS_SEC:1) ))
         for frac in 25 50 100; do
             n=$(( TOTAL_RECS * frac / 100 ))
-            hb=$(( n / (rate_b>0?rate_b:1) / 3600 )); hk=$(( n / (rate_k>0?rate_k:1) / 3600 ))
-            echo "    若唯一序列占 ${frac}% (= $n 条): BERT ≈ $hb 小时, Keras ≈ $hk 小时"
+            nb=$(awk -v n="$n" -v p="$NEED_PCT" 'BEGIN{printf "%d", n*p/100}')
+            hk=$(awk -v n="$n" -v r="$rate_k" 'BEGIN{printf "%.1f", n/(r>0?r:1)/3600}')
+            hb=$(awk -v n="$nb" -v r="$rate_b" 'BEGIN{printf "%.1f", n/(r>0?r:1)/3600}')
+            hb_full=$(awk -v n="$n" -v r="$rate_b" 'BEGIN{printf "%.0f", n/(r>0?r:1)/3600}')
+            echo "    若唯一序列占 ${frac}% (= $n 条): Keras ≈ $hk h;  BERT 级联(${nb} 条) ≈ $hb h;  [BERT 全量 ≈ $hb_full h]"
         done
     fi
     echo ""
@@ -210,7 +262,7 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "join" ]; then
         join -t $'\t' -1 3 -2 1 -o 1.1,1.2,0,2.2,2.3,2.4 "$gdir/.recs_by_seq" "$MERGED" \
             | sort -t $'\t' -k1,1n -S "$SORT_MEM" -T "$TMPDIR" \
             | awk 'BEGIN{OFS="\t"; print "name","seq","len","att_prob","lstm_prob","bert_prob","n_votes","is_AMP","AMP_pred","is_AMP_flex"}
-                   { v=0; if($4!="NA"&&$4>0.5)v++; if($5!="NA"&&$5>0.5)v++; if($6>0.5)v++;
+                   { v=0; if($4!="NA"&&$4>0.5)v++; if($5!="NA"&&$5>0.5)v++; if($6!="NA"&&$6>0.5)v++;
                      a=(v==3)?1:0; f=(v>=2)?1:0; print $2,$3,length($3),$4,$5,$6,v,a,a,f }' \
             > "$gdir/aggregated_results.tsv"
         n_in=$(grep -c '^>' "$fa" || echo 0); n_out=$(( $(wc -l < "$gdir/aggregated_results.tsv") - 1 ))

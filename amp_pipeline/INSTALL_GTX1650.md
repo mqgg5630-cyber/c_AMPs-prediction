@@ -132,3 +132,20 @@ bash amp_pipeline/verify_unique_vs_original.sh 200
 ```
 用 200 条已知 AMP 对比快速路径与原始脚本的概率：Attention/LSTM 应完全一致；BERT fp16 有 1e-3 级误差属正常，
 若想完全一致可 `BERT_FP16=0`（慢约 1.5~2 倍）。
+
+### 5) 实测吞吐与级联策略（GTX 1650 笔记本, 50 W）
+bench 结果：Attention+LSTM **≈ 3,000~6,600 条/s**；BERT **≈ 78 条/s**。全量约 1 亿唯一序列时 Keras 9 小时、BERT 却要 400 小时。
+
+因此默认开启 **级联** `BERT_CASCADE=1`：BERT 只跑「Attention 或 LSTM 至少一个 > 0.5」的序列。
+- 三票 AMP 需要 att、lstm、bert 全 > 0.5；两票 AMP 需要其中两个 > 0.5 —— 两者都 ≤ 0.5 的序列，无论 BERT 给多少，结论都不变。
+- 所以 `is_AMP` / `is_AMP_flex` 与全量跑 BERT **逐条完全一致**；只是那些序列的 `bert_prob` 记为 `NA`。
+- 需要 BERT 的比例通常只有唯一序列的几个百分点，BERT 总时长从数百小时降到个位数～十几小时。
+- 想要每条都有 `bert_prob`：`BERT_CASCADE=0`（或事后只对 NA 的部分补跑）。
+
+BERT 吞吐再提升的手段（按性价比）：
+| 手段 | 预期 | 备注 |
+|---|---|---|
+| `BERT_EVAL_BATCH_SIZE=512`（默认已改） | +10~30% | 显存仍 < 2 GB |
+| 笔记本接电源 + Windows 电源模式"最佳性能" | 可达 +50% | 1650 在电池/省电模式下 SM 时钟会掉到 300~600 MHz；看 `work/gpu_util.log` 的 `clocks.sm` 应在 1,400+ MHz |
+| `BERT_MAX_SEQ_LENGTH=52`（50 AA + 2） | +20% | 仅当 >50 AA 的序列极少时 |
+| 换到有 RTX 3060 以上或服务器 GPU | 10~30× | 若可用 HPC，用 `run_prediction_slurm.sh` |
