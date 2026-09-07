@@ -12,15 +12,19 @@
 Top pipeline strip (drawn icons, left → right): DNA/metagenome → sORF calling →
 peptide candidates → neural network → validated AMP (shield) → microplate MIC assay.
 
-1. **AMP biology** — Schiffer–Edmundson helical wheel (KWKLFKKILKVLKALV) with hydrophobic
-   moment μH arrow and residue color code; lipid-bilayer disruption diagram with carpet-model
-   helices, toroidal pore and leaking cytoplasmic contents.
+1. **AMP biology (hero illustration)** — two-stage bacterial-lysis scene: ① attack (cationic AMP
+   peptides with "+" beads approach, carpet-bind and insert; dashed pore defect with leaking
+   contents) → ② lysis (membrane rupture with torn edges, burst spikes, spilled DNA/ribosomes);
+   insets: Schiffer–Edmundson helical wheel with hydrophobic-moment μH arrow, toroidal-pore
+   bilayer close-up.
 2. **Feature encoding** — one-hot matrix; charge-vs-hydrophobicity scatter with AMP/non-AMP
    clusters and decision boundary; PLM (ESM-2/ProtT5/ProtBERT) blocks with attention arcs and
    embedding heatmap; position-wise sequence logo in bits.
-3. **Model architectures** — drawn diagrams: CNN (sliding filters → feature maps → pooling →
-   dense → P(AMP)), BiLSTM (bidirectional cell chain), Transformer (residue tokens, multi-head
-   attention arcs, blocks, [CLS]); hybrid/transfer-learning footnote.
+3. **Model architectures** — three equal-height symmetric columns (vertical data flow):
+   CNN (residue strip → dashed conv filters with sliding arrows → feature maps), BiLSTM
+   (token row → bidirectional cell chain → hidden-state dots), Transformer (tokens →
+   multi-head attention arcs → blocks); all three fuse via dashed connectors into a
+   "hybrid ensemble" pill; per-column P(AMP) score pills aligned on one baseline.
 4. **Training & evaluation** — ROC/AUC curve family (PLM vs hybrid vs CNN), grouped metric bars
    (Sn/Sp/Acc/MCC for BiLSTM vs BERT), 2×2 confusion matrix.
 5. **Applications** — screening funnel (10⁶ sORFs → ~10³ scored → ~10² validated), generative
