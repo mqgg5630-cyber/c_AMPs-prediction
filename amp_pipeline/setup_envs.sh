@@ -178,8 +178,33 @@ install_bert() {
     # torch 1.10.1 是最后一个支持 py3.6 的版本, cu113 内置 sm_75 (GTX 1650)
     # torch+cu113 约 1.8GB, 加超时/重试; 断线可直接重跑本脚本 (bert)
     if ! "$PY_BERT" -c "import torch" 2>/dev/null; then
-        pip_install "$PY_BERT" torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113 \
-        || pip_install "$PY_BERT" torch==1.10.1+cu113 -f https://download.pytorch.org/whl/torch_stable.html
+        # torch wheel 1.8GB, pip 不能续传, 网络一断就报 hash mismatch / BadZipFile。
+        # 改为 wget -c 断点续传到本地 (国内镜像优先), 校验 sha256 后从本地安装。
+        TORCH_WHL="torch-1.10.1+cu113-cp36-cp36m-linux_x86_64.whl"
+        TORCH_SHA="4dd6177b1233b9d02308f01e2e4ac1ec746c643268917eb3614dff353d5bd4fc"
+        TORCH_DIR="$HOME/.cache/torch_wheels"; mkdir -p "$TORCH_DIR"
+        TORCH_LOCAL="$TORCH_DIR/$TORCH_WHL"
+        TORCH_URLS=(
+            "https://mirrors.aliyun.com/pytorch-wheels/cu113/torch-1.10.1%2Bcu113-cp36-cp36m-linux_x86_64.whl"
+            "https://mirror.sjtu.edu.cn/pytorch-wheels/cu113/torch-1.10.1%2Bcu113-cp36-cp36m-linux_x86_64.whl"
+            "https://download.pytorch.org/whl/cu113/torch-1.10.1%2Bcu113-cp36-cp36m-linux_x86_64.whl"
+        )
+        torch_ok() { [ -f "$TORCH_LOCAL" ] && [ "$(sha256sum "$TORCH_LOCAL" | cut -d' ' -f1)" = "$TORCH_SHA" ]; }
+        if torch_ok; then
+            echo "  [已缓存] $TORCH_LOCAL (sha256 正确)"
+        else
+            for u in "${TORCH_URLS[@]}"; do
+                echo "  [下载 torch 1.8GB, 支持断点续传] <- $u"
+                wget -c -q --show-progress --tries=50 --waitretry=5 --read-timeout=60 -O "$TORCH_LOCAL" "$u" || true
+                if torch_ok; then echo "  [完成] sha256 校验通过"; break; fi
+                # 若文件大小已达 1.8GB 但 sha 不对, 说明该镜像文件损坏, 删掉换源; 否则保留续传
+                sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
+                if [ "$sz" -gt 1800000000 ]; then echo "  [损坏] 删除后换源"; rm -f "$TORCH_LOCAL"; fi
+                echo "  [未完成] 换下一个源继续 (已下载 $((sz/1024/1024)) MB, 会续传) ..."
+            done
+        fi
+        torch_ok || { echo "[错误] torch wheel 下载失败, 请重跑本脚本 (会续传), 或手动下载到 $TORCH_LOCAL"; exit 1; }
+        pip_install "$PY_BERT" "$TORCH_LOCAL"
     fi
     pip_install "$PY_BERT" "numpy<1.20" "pandas<1.2" "scikit-learn<1.0" \
         boto3 requests regex tqdm "pytorch_pretrained_bert==0.6.1"

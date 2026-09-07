@@ -89,6 +89,7 @@ N=100 bash amp_pipeline/test_models.sh  # 前 100 条
 | TF 报 `libcudart.so.10.0 not found` | `conda install -n camps-tf114 cudatoolkit=10.0 cudnn=7.6 -c defaults` |
 | TF 报 `Could not create cudnn handle` / OOM | 已开 `allow_growth`；再降 `TF_PREDICT_BATCH_SIZE=256` |
 | `load_model` 报 `'str' object has no attribute 'decode'` | h5py 版本过高：`pip install h5py==2.10.0` |
+| torch 安装报 `HASHES DO NOT MATCH` / `BadZipFile` | 1.8GB wheel 下载被掐断。脚本已改为 `wget -c` 续传到 `~/.cache/torch_wheels/`，**重跑 `setup_envs.sh bert` 即可续传** |
 | `torch.cuda.is_available()` 为 False | 装成了 CPU 版，重跑 `setup_envs.sh bert` 或 `pip install torch==1.10.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113` |
 | BERT 报 tokenizer 无法解析 | 首次需联网下载 `bert-base-uncased` vocab；离线时把 `vocab.txt` 放到 `Models/bert-base-uncased/` |
 | mamba 下载 cudatoolkit/cudnn 报 `Download error (56)` / `unexpected eof` | 镜像对大包断线。脚本已改为 `wget -c` 断点续传预下载，**直接重跑 `setup_envs.sh tf` 即可续传** |
