@@ -87,21 +87,25 @@ maybe_setup_tf() {
     echo ">> 安装基础依赖 (numpy/h5py/keras)..."
     "$PIP" install "numpy==1.16.2" "h5py==2.9.0" "Keras==2.2.4" "pillow"
 
-    local tf_pkg="tensorflow==1.14.0"
+    # 只装一种后端, 避免 CPU 版覆盖 GPU 版(二选一)
     if [ "$TF_BACKEND" = "gpu" ]; then
-        tf_pkg="tensorflow-gpu==1.14.0"
-    elif [ "$TF_BACKEND" = "auto" ]; then
-        # 先试 GPU, 失败即回退 CPU
+        echo ">> 安装 tensorflow-gpu==1.14.0 ..."
+        "$PIP" install "tensorflow-gpu==1.14.0"
+    elif [ "$TF_BACKEND" = "cpu" ]; then
+        echo ">> 安装 tensorflow==1.14.0 (CPU)..."
+        "$PIP" install "tensorflow==1.14.0"
+    else  # auto: 先试 GPU, 失败即回退 CPU
         echo ">> 尝试安装 tensorflow-gpu==1.14.0 (可能需要老 CUDA10/cuDNN7 运行库)..."
-        if "$PIP" install "tensorflow-gpu==1.14.0"; then
-            echo "   tensorflow-gpu 安装成功。"
-        else
+        if ! "$PIP" install "tensorflow-gpu==1.14.0"; then
             echo "   !! tensorflow-gpu 安装失败, 自动回退 CPU 版 (功能等价)。"
-            tf_pkg="tensorflow==1.14.0"
+            "$PIP" install "tensorflow==1.14.0"
         fi
     fi
-    echo ">> 安装 $tf_pkg ..."
-    "$PIP" install "$tf_pkg"
+
+    # TF1.14 很老, 与 protobuf>=4 不兼容 (Descriptors cannot be created directly);
+    # 必须把 protobuf 钉在 3.20 以下才能 import tensorflow。
+    echo ">> 钉 protobuf<3.20 (兼容 TF1.14 必要步骤)..."
+    "$PIP" install "protobuf==3.19.6"
 
     echo ">> $ENV_TF_NAME 就绪。验证:"
     "$PY" -c "import tensorflow as tf, keras; print('TF', tf.__version__, '| Keras', keras.__version__, '| GPU devices:', tf.test.is_gpu_available())"
