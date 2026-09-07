@@ -116,12 +116,9 @@ def blood_vessel(x, y):
         if i % 2 == 0:
             C(x-10+dr(i,56)*35, y+47+i*36, 12, "#EFF3FC", "#9CADC7", 0.9)
             C(x-10+dr(i,56)*35, y+47+i*36, 4, "#9BAFD3")
-    txt(x, y+12, "bloodstream", 12, "#111827", weight="bold")
-    label(x, y+342, "circulating OMVs, enzymes and cytokines")
 
 
 def bbb(x, y):
-    txt(x, y+12, "BBB", 12, "#111827", weight="bold")
     R(x-27, y+5, 54, 310, "#FFF2F4", "#D77C87", 1.2, rx=12)
     for i in range(8):
         R(x-18, y+17+i*36, 36, 24, "#F7B8C0", "#BD6975", 0.8, rx=7)
@@ -134,7 +131,6 @@ def bbb(x, y):
         LN(x+34, yy, x+78, yy-20, "#2E83A4", 1.3)
         LN(x+60, yy-10, x+86, yy-35, "#2E83A4", 1.1)
         LN(x+59, yy-10, x+90, yy+8, "#2E83A4", 1.0)
-    label(x, y+342, "tight-junction gate, not colour alone")
 
 
 def brain_icon(x, y):
@@ -146,7 +142,6 @@ def brain_icon(x, y):
         P(f"M{x1:.1f},{y1:.1f} C{x1+20:.1f},{y1-22:.1f} {x1+42:.1f},{y1+18:.1f} {x1+65:.1f},{y1-2:.1f}", fill="none", stroke="#C1CAD8", sw=1.0)
     P(f"M{x-35},{y+142} C{x+10},{y+113} {x+60},{y+113} {x+83},{y+142} C{x+45},{y+132} {x+9},{y+136} {x-18},{y+163} Z", fill="#D9E3F2", stroke="#8299B6", sw=1.2)
     P(f"M{x+22},{y+160} C{x+54},{y+156} {x+71},{y+177} {x+69},{y+209} C{x+48},{y+198} {x+33},{y+187} {x+22},{y+160} Z", fill="#D2DEEE", stroke="#8299B6", sw=1.1)
-    txt(x, y+50, "brain", 12, "#111827", weight="bold")
 
 
 def neuron_callout(x, y):
@@ -259,65 +254,148 @@ def method_md(x, y):
 
 
 def make_pg_ad_svg(out: Path):
+    """Rebuild the P. gingivalis/AD figure in the reference layout.
+
+    This intentionally abandons the failed six-card scaffold. The composition is
+    a continuous left-to-right mechanism path with only true callout boxes:
+    periodontal source -> gingipains/OMVs -> bloodstream -> BBB -> brain, with
+    neuron and AChE-Aβ insets plus a compact evidence strip.
+    """
     L.clear()
     add(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="pgad-title pgad-desc">')
     add('<title id="pgad-title">P. gingivalis virulence factors connect periodontal infection to Alzheimer\'s disease mechanisms</title>')
     add('<desc id="pgad-desc">Graphical abstract. Porphyromonas gingivalis in periodontal pockets releases gingipain proteases and outer-membrane vesicles that enter the bloodstream, cross or perturb the blood-brain barrier, and converge on neuronal injury, amyloid-beta plaques, tau fragments and acetylcholinesterase-mediated amyloid-beta nucleation. Transcriptomics, molecular docking and one-microsecond molecular dynamics provide orthogonal evidence.</desc>')
     build_defs()
     R(0, 0, W, H, "#FFFFFF")
-    txt(30, 35, "P. gingivalis virulence factors, BBB transit and AChE-Aβ nucleation in Alzheimer\'s disease", 17, "#111827", "start", "bold")
-    LN(30, 53, 1530, 53, "#D8E1EA", 1.2)
 
-    rounded_panel(20, 70, 270, 610, "#FFF5F2", "#F1C1B5", "zone-a", "a", "Periodontal niche")
-    txt(75, 111, "P. gingivalis", 15, "#111827", "start", "bold", "italic")
-    pathogen(162, 300, 0.95)
-    label(155, 622, "biofilm in inflamed periodontal pocket")
+    # ---------- top mechanism canvas (reference-like; no card scaffold) ----------
+    group_start("zone-a")
+    txt(60, 50, "P. gingivalis", 20, "#111827", "start", "bold", "italic")
+    # large zoom circle with rods/fimbriae
+    C(155, 145, 86, "#F8FBFF", "#153B6E", 2.4)
+    for i in range(70):
+        C(92+dr(i,1)*126, 82+dr(i,2)*116, 1.8+dr(i,3)*1.4, ["#6C4CA5", "#2D78A6", "#B36D5C"][i%3], opacity=0.75)
+    for i in range(7):
+        bx=95+dr(i,4)*120; by=92+dr(i,5)*95; ang=-32+dr(i,6)*70
+        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f})">')
+        R(-26, -7, 52, 14, "url(#gPurp)", "#4B357D", 1.0, rx=7)
+        PELL(-10, -5, 13, 3.4, "#FFFFFF", opacity=0.28)
+        for k in range(7):
+            a=math.radians(k*52 + 12)
+            LN(0, 0, 30*math.cos(a), 20*math.sin(a), "#4B357D", 0.85)
+        add('</g>')
+    # teeth, gingiva and bone cross-section: reference-like periodontal cross section
+    tooth_specs=[(-36,74,1.03),(35,80,1.10),(112,78,1.05),(190,70,0.96)]
+    for tx,tw,sc in tooth_specs:
+        # enamel crown, partly hidden by the gum line
+        P(f"M{tx+7},{384} C{tx-15},{322} {tx-2},{246} {tx+34},{224} C{tx+62},{205} {tx+92},{226} {tx+103},{276} C{tx+114},{325} {tx+96},{371} {tx+78},{392} C{tx+58},{409} {tx+26},{407} {tx+7},{384} Z", fill="#FFFDF8", stroke="#D8CFC7", sw=1.2)
+        # root/dentin column
+        P(f"M{tx+28},{382} C{tx+30},{438} {tx+18},{496} {tx+7},{552} C{tx+33},{565} {tx+70},{565} {tx+96},{552} C{tx+83},{496} {tx+81},{438} {tx+70},{382} Z", fill="#F5EDDF", stroke="#D5C6B5", sw=1.0)
+        PELL(tx+42, 253, 22, 7.5, "#FFFFFF", opacity=0.48)
+        LN(tx+68, 246, tx+82, 332, "#E7DED2", 0.8, opacity=0.55)
+    # gingival margin with inflamed pocket and plaque wedge
+    P("M0,416 C45,355 90,374 122,440 C154,365 233,351 296,417 L296,600 L0,600 Z", fill="#F8B9BE", stroke="#C55F69", sw=1.2)
+    P("M66,383 C98,389 116,420 124,461 C141,414 180,386 227,385 C212,474 183,546 128,565 C78,538 57,458 66,383 Z", fill="#E89AA0", stroke="#B85761", sw=1.0)
+    P("M120,403 C158,423 165,515 126,548 C97,511 95,430 120,403 Z", fill="#D69A6F", stroke="#A66E50", sw=1.0)
+    P("M112,397 C130,420 134,511 121,539", fill="none", stroke="#915A43", sw=1.0, opacity=0.7)
+    # subtle enamel/gum highlights
+    P("M7,438 C45,407 83,415 111,456", fill="none", stroke="#FFFFFF", sw=2.4, opacity=0.25)
+    P("M155,436 C191,405 233,410 285,441", fill="none", stroke="#FFFFFF", sw=2.2, opacity=0.23)
+    # biofilm rods in pocket
+    for i in range(26):
+        bx=98+dr(i,7)*70; by=405+dr(i,8)*120; ang=-70+dr(i,9)*140
+        add(f'<g transform="translate({bx:.1f},{by:.1f}) rotate({ang:.1f}) scale(0.82)">')
+        R(-22, -6, 44, 12, "url(#gPurp)", "#4B357D", 0.9, rx=6)
+        PELL(-8, -4, 11, 3, "#FFFFFF", opacity=0.26)
+        for k in range(5):
+            a=math.radians(k*72)
+            LN(0, 0, 25*math.cos(a), 19*math.sin(a), "#4B357D", 0.65)
+        add('</g>')
+    # porous bone
+    P("M0,565 C55,535 105,558 154,546 C205,532 252,555 295,538 L295,670 L0,670 Z", fill="#F3DEC9", stroke="#D6B998", sw=1.0)
+    for i in range(54):
+        C(12+dr(i,10)*270, 580+dr(i,11)*75, 5+dr(i,12)*8, "#F8EEE5", "#D5B99B", 0.6)
+    # connector from pocket to zoom
+    R(141, 329, 21, 22, "none", "#263238", 1.0)
+    LN(141, 329, 91, 218, "#263238", 1.0, dash="5,4")
+    LN(162, 329, 214, 219, "#263238", 1.0, dash="5,4")
     group_end()
 
-    rounded_panel(310, 190, 260, 385, "#F7FCFB", "#B7E1DC", "zone-b", "b", "Gingipains and OMVs")
-    cargo_panel(440, 288)
+    # virulence cargo callouts: white scientific inset boxes like the reference
+    group_start("zone-b")
+    txt(355, 260, "gingipains/OMVs", 15, "#111827", "start", "bold")
+    R(305, 285, 190, 132, "#FFFFFF", "#2F3D52", 1.2, rx=6)
+    txt(400, 312, "gingipains", 12, "#111827")
+    for i, (nm, grad, col) in enumerate([("RgpA", "gBlue", "#2B5EA7"), ("RgpB", "gTeal", "#0C7A72"), ("Kgp", "gTom", "#D63426")]):
+        cx=345+i*55
+        P(f"M{cx-18},337 C{cx-5},320 {cx+20},326 {cx+20},345 C{cx+18},362 {cx-6},368 {cx-18},354 C{cx-8},350 {cx-8},342 {cx-18},337 Z", fill=f"url(#{grad})", stroke=col, sw=1.0)
+        txt(cx, 388, nm, 10, "#1F2B3A")
+    R(305, 430, 190, 126, "#FFFFFF", "#2F3D52", 1.2, rx=6)
+    txt(400, 457, "OMVs", 12, "#111827")
+    for i in range(7):
+        cx=333+i*24; cy=500 + (i%2)*15
+        C(cx, cy, 17, "#FFFFFF", "#5A50AA", 1.6)
+        C(cx, cy, 12, "#F7FBFF", "#8C82D8", 0.8, dash="2,2")
+        for k,col in enumerate(["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"]):
+            C(cx-6+(k%2)*11, cy-5+(k//2)*9, 3.0, col)
     group_end()
 
-    rounded_panel(600, 155, 170, 430, "#FFF4F5", "#F1C4C8", "zone-c", "c", "Systemic spread")
-    blood_vessel(685, 205)
+    # released cargo cloud and reference-style arrows
+    for i in range(36):
+        C(520+dr(i,20)*78, 340+dr(i,21)*190, 3.0+dr(i,22)*2.2, ["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"][i%4])
+    for i in range(5):
+        cx=535+dr(i,23)*55; cy=385+dr(i,24)*105
+        C(cx, cy, 14, "#FFFFFF", "#5A50AA", 1.1)
+        C(cx, cy, 9, "#F6FAFF", "#8C82D8", 0.7, dash="2,2")
+        C(cx-3, cy, 3, "#0C7A72"); C(cx+5, cy+2, 2.8, "#D63426")
+    ARROW(252, 445, 292, 445, "#526B82", 3.0, 7)
+    ARROW(505, 448, 584, 448, "#526B82", 3.0, 7)
+
+    group_start("zone-c")
+    blood_vessel(668, 200)
+    label(668, 540, "circulating OMVs, enzymes and cytokines", 8.2)
+    # add bolder center label and hide earlier small label issue by placing high on vessel
+    txt(668, 185, "bloodstream", 15, "#111827", weight="bold")
+    group_end()
+    ARROW(730, 448, 767, 448, "#526B82", 3.0, 7)
+
+    group_start("zone-d")
+    bbb(805, 200)
+    label(805, 540, "tight-junction gate + astrocyte endfeet", 8.2)
+    txt(805, 185, "BBB", 15, "#111827", weight="bold")
+    group_end()
+    ARROW(858, 448, 900, 448, "#526B82", 3.0, 7)
+    for i in range(18):
+        C(878+dr(i,30)*70, 393+dr(i,31)*92, 3.2+dr(i,32)*1.4, ["#2B5EA7", "#0C7A72", "#D63426"][i%3])
+
+    group_start("zone-e")
+    brain_icon(1040, 230)
+    label(1040, 540, "neuroinflammation and proteinopathy", 8.2)
+    # improve anatomy contrast on top of existing brain
+    P("M943,375 C990,337 1067,333 1118,374", fill="none", stroke="#8FA0B8", sw=1.3)
+    P("M970,425 C1015,393 1080,390 1130,420", fill="none", stroke="#C0CAD8", sw=1.1)
+    txt(1035, 190, "brain", 15, "#111827", weight="bold")
+    R(1120, 330, 22, 22, "none", "#1F385C", 1.2)
+    group_end()
+    LN(1142, 330, 1238, 125, "#1F385C", 1.0, dash="5,4")
+    LN(1142, 352, 1238, 455, "#1F385C", 1.0, dash="5,4")
+
+    group_start("zone-f")
+    neuron_callout(1238, 50)
+    ache_ab_callout(1238, 330)
     group_end()
 
-    rounded_panel(795, 155, 140, 430, "#F5FBFD", "#B9DCE6", "zone-d", "d", "BBB gate")
-    bbb(865, 205)
+    # ---------- bottom evidence strip ----------
+    group_start("zone-g")
+    R(14, 700, 1532, 262, "#FBFDFF", "#153B6E", 1.6, rx=10)
+    method_transcriptomics(185, 815)
+    LN(438, 733, 438, 925, "#AEB9C5", 1.2)
+    method_docking(620, 815)
+    LN(805, 733, 805, 925, "#AEB9C5", 1.2)
+    method_md(970, 815)
     group_end()
 
-    rounded_panel(955, 145, 250, 430, "#F7FAFF", "#C5D4EC", "zone-e", "e", "Brain entry")
-    brain_icon(1085, 220)
-    label(1085, 522, "neuroinflammation and proteinopathy")
-    group_end()
-
-    rounded_panel(1225, 70, 315, 610, "#FBFDFF", "#C4D3E8", "zone-f", "f", "Neuronal mechanisms")
-    neuron_callout(1242, 110)
-    ache_ab_callout(1248, 380)
-    group_end()
-
-    # flow arrows and molecules
-    ARROW(275, 372, 313, 372, "#526B82", 3.0, 7)
-    for i in range(24):
-        C(592+dr(i,150)*56, 336+dr(i,151)*106, 3.7, ["#2B5EA7", "#0C7A72", "#D63426", "#5F4DA8"][i%4])
-    ARROW(570, 382, 600, 382, "#526B82", 3.0, 7)
-    ARROW(770, 382, 795, 382, "#526B82", 3.0, 7)
-    for i in range(14): C(942+dr(i,160)*42, 344+dr(i,161)*70, 3.5, ["#2B5EA7", "#0C7A72", "#D63426"][i%3])
-    ARROW(935, 382, 955, 382, "#526B82", 3.0, 7)
-    # dashed magnification lines from brain to callouts
-    R(1118, 315, 22, 22, "none", "#1F385C", 1.2)
-    LN(1140, 315, 1242, 180, "#1F385C", 1.0, dash="5,4")
-    LN(1140, 337, 1238, 505, "#1F385C", 1.0, dash="5,4")
-
-    # bottom methods panel
-    rounded_panel(20, 710, 1520, 265, "#FBFDFF", "#153B6E", "zone-g", "g", "Orthogonal computational and omics evidence")
-    method_transcriptomics(205, 825)
-    LN(510, 742, 510, 940, "#B4C0CC", 1.4)
-    method_docking(690, 825)
-    LN(865, 742, 865, 940, "#B4C0CC", 1.4)
-    method_md(1035, 825)
-    group_end()
-
+    # caption: journal format, two lines, unobtrusive
     txt(34, 1034, "Figure 1 |", 10.5, "#37474F", "start", "bold")
     txt(98, 1034, "P. gingivalis-driven periodontal-to-brain mechanisms in Alzheimer\'s disease.", 10.5, "#5A6B7A", "start")
     txt(34, 1050, "Gingipains and OMVs disseminate through blood and BBB interfaces, linking infection to neuronal injury and AChE-Aβ nucleation.", 9.0, "#7F8A96", "start")
