@@ -470,6 +470,13 @@ class BaseBertEstimator(BaseEstimator):
                                                  num_mlp_layers=num_mlp_layers,
                                                  num_mlp_hiddens=num_mlp_hiddens)
         params = state['params']
+        # ``restore_finetuned_model`` runs before BaseBertEstimator.__init__
+        # has initialized the sklearn hyperparameter attributes.  sklearn's
+        # set_params() calls get_params() first, so initialize all saved
+        # attributes before delegating to set_params().  This is especially
+        # important when loading old checkpoints on CPU-only PyTorch.
+        for key, value in params.items():
+            setattr(self, key, value)
         self.set_params(**params)
         self.input_text_pairs = state['input_text_pairs']
         self.id2label = state['id2label']
