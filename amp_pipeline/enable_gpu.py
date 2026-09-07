@@ -24,7 +24,7 @@ def main():
     ap.add_argument("--skip-tf", action="store_true", help="只安装/验证 BERT GPU")
     ap.add_argument("--skip-test", action="store_true", help="安装后不运行两条序列 smoke test")
     args=ap.parse_args()
-    conda=find_root(); py36=conda/"envs/py36"; tf=conda/"envs/camps-tf114"
+    conda=find_root(); conda_exe=conda/"bin/conda"; py36=conda/"envs/py36"; tf=conda/"envs/camps-tf114"
     for e in (py36, tf):
         if not (e/"bin/python").exists(): raise SystemExit(f"找不到环境: {e}")
 
@@ -38,7 +38,7 @@ def main():
     if not args.skip_tf:
         # TF 1.14 requires its historical CUDA runtime, independent of the
         # newer CUDA version reported by nvidia-smi.
-        run([conda,"install","-y","-c","conda-forge","-n","camps-tf114","cudatoolkit=10.0","cudnn=7.6"], check=False)
+        run([conda_exe,"install","-y","-c","conda-forge","-n","camps-tf114","cudatoolkit=10.0","cudnn=7.6"], check=False)
         tfpip=tf/"bin/pip"; tfpy=tf/"bin/python"
         run([tfpip,"uninstall","-y","tensorflow","tensorflow-gpu"], check=False)
         run([tfpip,"install","tensorflow-gpu==1.14.0","protobuf==3.19.6"])
