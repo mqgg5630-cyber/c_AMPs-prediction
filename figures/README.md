@@ -18,15 +18,20 @@ f Mechanism (bacterium under AMP attack; carpet/toroidal/micelle vignettes).
 ## Figure 2 — Machine learning for umami peptide discovery
 `umami_ml_fig1.svg` (master) + `.png` (2340x1590)
 
-a Foods (kombu, tomato, mushroom, cheese, soybeans, fish -> food proteins) -
-b Preparation (protease scissors cut the protein chain; yeast, ultrafiltration
-funnel, peptide fractions) - c Screening (peptides into a neural-net monitor,
-RF/SVM/CNN chip, funnel to ranked umami candidates) - d Tasting (tongue,
-3-person sensory panel, electronic tongue) - e Receptor (T1R1/T1R3 dimer with
-Venus-flytrap lobes catching a peptide in the membrane, G-protein signal to
-"umami!"; cell-based assay) - f Products (steaming soup bowl, soy-sauce
-bottle, salt shaker with reduction arrow, cutlery, balanced-meal plate,
-low-salt banner).
+a Foods (kombu, tomato, mushroom, shrimp, cheese, soybeans, fish, bacon in a
+4x2 grid with umami sparkles, converging into the food-protein bead chain) -
+b Preparation (protease scissors cut the chain in two places with falling
+fragments; big ultrafiltration funnel with a "< 3 kDa" chip, 6-tube fraction
+rack, freeze-drying flask with snowflakes, peptide-powder jar with scoop) -
+c Screening (peptides into a neural-net monitor, RF/SVM/CNN chip, funnel to
+ranked candidates card, magnifier over key motifs) - d Tasting (tongue,
+3-person sensory panel with rating stars, broth-scoring bowls, sensory-log
+clipboard, electronic tongue) - e Receptor (in-vitro vial, T1R1/T1R3 dimer
+with Venus-flytrap lobes catching the peptide, brain "perception" branch,
+G-protein signal to "umami!", transfected-cell assay with Ca2+ sparkles) -
+f Products (soup bowl, soy-sauce bottle, salt shaker with reduction arrow,
+cutlery, balanced-meal plate, instant-noodle cup, banner plus a
+healthy/natural/tasty icon trio).
 
 **Editing** - zones are named groups `zone-a`...`zone-f`; every icon is plain
 paths/ellipses referencing one `<defs>` gradient block (recolor globally).
