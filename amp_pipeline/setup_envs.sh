@@ -193,15 +193,24 @@ install_bert() {
         if torch_ok; then
             echo "  [已缓存] $TORCH_LOCAL (sha256 正确)"
         else
-            for u in "${TORCH_URLS[@]}"; do
-                echo "  [下载 torch 1.8GB, 支持断点续传] <- $u"
-                wget -c -q --show-progress --tries=50 --waitretry=5 --read-timeout=60 -O "$TORCH_LOCAL" "$u" || true
-                if torch_ok; then echo "  [完成] sha256 校验通过"; break; fi
-                # 若文件大小已达 1.8GB 但 sha 不对, 说明该镜像文件损坏, 删掉换源; 否则保留续传
-                sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
-                if [ "$sz" -gt 1800000000 ]; then echo "  [损坏] 删除后换源"; rm -f "$TORCH_LOCAL"; fi
-                echo "  [未完成] 换下一个源继续 (已下载 $((sz/1024/1024)) MB, 会续传) ..."
+            # 网络不稳时单次连接只能活零点几秒, 所以外层循环轮询各源直到下完 (Ctrl+C 可中断, 重跑续传)
+            TORCH_TOTAL=1821000000
+            round=0
+            while ! torch_ok; do
+                round=$((round+1))
+                for u in "${TORCH_URLS[@]}"; do
+                    sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
+                    echo "  [第 $round 轮] 已下载 $((sz/1024/1024)) MB / 1736 MB, 续传 <- $u"
+                    wget -c -q --tries=200 --waitretry=2 --read-timeout=30 --progress=dot:giga \
+                         -O "$TORCH_LOCAL" "$u" 2>&1 | grep -oE '[0-9]+%' | uniq | tr '\n' ' '; echo
+                    torch_ok && break
+                    sz=$(stat -c %s "$TORCH_LOCAL" 2>/dev/null || echo 0)
+                    # 文件已满长度但 sha 不对 => 该源文件损坏/不一致, 删掉重来
+                    if [ "$sz" -ge "$TORCH_TOTAL" ]; then echo "  [损坏] 文件完整但 sha256 不符, 删除重下"; rm -f "$TORCH_LOCAL"; fi
+                done
+                if ! torch_ok && [ "$round" -ge 30 ]; then break; fi
             done
+            torch_ok && echo "  [完成] sha256 校验通过"
         fi
         torch_ok || { echo "[错误] torch wheel 下载失败, 请重跑本脚本 (会续传), 或手动下载到 $TORCH_LOCAL"; exit 1; }
         pip_install "$PY_BERT" "$TORCH_LOCAL"
