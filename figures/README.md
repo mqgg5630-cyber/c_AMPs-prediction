@@ -8,12 +8,16 @@ chunky letter chips; text is kept to short captions.
 ## Figure 1 — Deep learning for antimicrobial peptide prediction
 `amp_dl_review_fig1.svg` (master) + `.png` (2340x1590)
 
-a Sources (gut/soil/water, DNA, databases, tubes) - b Deep learning (peptide
-chain into a glowing neural-net monitor, server, code, AI brain) - c Candidates
-(helix ribbon, helical wheel, funnel to ranked-leads card) - d Validation
-(petri dish with inhibition halos, 96-well MIC plate, tubes, flasks, pipette) -
-e Applications (pill, cream, apple, shield, mouse, plate, banner) -
-f Mechanism (bacterium under AMP attack; carpet/toroidal/micelle vignettes).
+a Sources (gut/soil/water icons, DNA, databases, validated tubes, and a
+"known AMPs" corpus card) - b Deep learning (peptide chain into a glowing
+neural-net monitor, server + GPU cluster, code, AI brain, mouse) - c Candidates
+(helix ribbon, helical wheel, sequence-optimization scene, funnel to
+ranked-leads card) - d Validation (petri dish with inhibition halos, 96-well
+MIC plate, tubes, flasks, pipette, sterility/hemolysis/microscopy strip) -
+e Applications (pill, cream, apple, shield, syringe, bandage, mouse, plate,
+banner, clinical-trials checklist, manufacturing) - f Mechanism (bacterium
+under multi-chain AMP attack with pore leaks and DNA debris; carpet/toroidal/
+micelle vignettes).
 
 ## Figure 2 — Machine learning for umami peptide discovery
 `umami_ml_fig1.svg` (master) + `.png` (2340x1590)
@@ -36,3 +40,7 @@ healthy/natural/tasty icon trio).
 **Editing** - zones are named groups `zone-a`...`zone-f`; every icon is plain
 paths/ellipses referencing one `<defs>` gradient block (recolor globally).
 Generators kept out of the repo; export via PDF/EPS or 600-dpi TIFF.
+
+**Reproducibility** - the full methodology (layout system, glossy-icon rules,
+renderer-safe constraints, overflow + pixel-probe QA pipeline) is captured in
+`.claude/skills/biorender-svg-figure/` (SKILL.md + references/helpers.py).
