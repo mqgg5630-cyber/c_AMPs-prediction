@@ -22,8 +22,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GROUPED_DIR="${1:-sorf_grouped_catalog}"
 RESULTS_ROOT="${2:-amp_results}"
 PROJECT_DIR="${3:-$(dirname "$SCRIPT_DIR")}"
-ENV_TF="${4:-/home/w26/miniconda3/envs/camps-tf114}"
-ENV_BERT="${5:-/home/w26/miniconda3/envs/py36}"
+# 自动定位 conda base (默认环境名 camps-tf114 / py36, 可用 ENV_TF/ENV_BERT 覆盖)
+CONDA_BASE="$(conda info --base 2>/dev/null || true)"
+if [ -z "$CONDA_BASE" ]; then
+    for c in "$HOME/miniconda3" "$HOME/anaconda3" "$HOME/mambaforge" "$HOME/miniforge3" /opt/conda; do
+        [ -d "$c/envs" ] && CONDA_BASE="$c" && break
+    done
+fi
+ENV_TF="${4:-${ENV_TF:-$CONDA_BASE/envs/camps-tf114}}"
+ENV_BERT="${5:-${ENV_BERT:-$CONDA_BASE/envs/py36}}"
 
 SKIP_TOTAL="${SKIP_TOTAL:-1}"    # 1 = 跳过 sORF_All_Total.fa; 0 = 也跑
 
