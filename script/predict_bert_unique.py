@@ -15,7 +15,7 @@ predict_bert_unique.py —— BERT 高吞吐流式预测 (GTX 1650 / 4GB 显存�
     python predict_bert_unique.py <seqs.txt|fasta> <out.tsv> [total_seqs]
 输出: 每条输入一行 bert_prob
 环境变量:
-    BERT_EVAL_BATCH_SIZE (默认 256)  BERT_MAX_SEQ_LENGTH (默认 66)  BERT_CHUNK_SIZE (默认 100000)
+    BERT_EVAL_BATCH_SIZE (默认 256)  BERT_MAX_SEQ_LENGTH (默认 66)  BERT_CHUNK_SIZE (默认 20000)
     BERT_FP16 (默认 1)  BERT_USE_CUDA (auto/1/0)
 """
 import os
@@ -52,7 +52,7 @@ total = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3].isdigit() else 0
 
 batch_size = int(os.environ.get("BERT_EVAL_BATCH_SIZE", "256"))
 max_len = int(os.environ.get("BERT_MAX_SEQ_LENGTH", "66"))
-chunk_size = int(os.environ.get("BERT_CHUNK_SIZE", "100000"))
+chunk_size = int(os.environ.get("BERT_CHUNK_SIZE", "20000"))
 use_fp16 = os.environ.get("BERT_FP16", "1").strip().lower() in ("1", "true", "yes")
 raw_cuda = os.environ.get("BERT_USE_CUDA", "auto").strip().lower()
 if raw_cuda in ("1", "true", "yes"):
@@ -120,6 +120,12 @@ if os.path.exists(out_path):
         print("[BERT] 断点续跑: 输出已有 %d 行, 跳过对应输入" % done, flush=True)
 
 
+processed = done
+t_start = time.time()
+last_report = t_start
+print("[BERT] 开始预测 (首批含 CUDA 预热, 约 10~30s 后出现进度行) ...", flush=True)
+
+
 @torch.no_grad()
 def predict_chunk(seqs):
     """seqs: list[str]; 返回 np.float32 [n] 的 AMP 概率 (按输入顺序)."""
@@ -131,7 +137,19 @@ def predict_chunk(seqs):
     lens = np.fromiter((len(x) + 2 for x in ids_list), dtype=np.int64, count=n)
     order = np.argsort(lens, kind="stable")
     probs = np.empty(n, dtype=np.float32)
+    global last_report, processed
     for st in range(0, n, batch_size):
+        now = time.time()
+        if now - last_report >= 10:
+            cur = processed + st
+            rate = (cur - done) / max(1e-6, now - t_start)
+            msg = "  [BERT 进度] %d 条  %.0f 条/s" % (cur, rate)
+            if total:
+                msg += "  剩余约 %.1f 小时 (%.1f%%)" % ((total - cur) / max(rate, 1e-6) / 3600, 100.0 * cur / total)
+            if use_cuda:
+                msg += "  显存峰值 %.0f MB" % (torch.cuda.max_memory_allocated() / 1e6)
+            print(msg, flush=True)
+            last_report = now
         idx = order[st:st + batch_size]
         L = int(lens[idx].max())
         input_ids = np.full((len(idx), L), PAD, dtype=np.int64)
@@ -152,11 +170,8 @@ def predict_chunk(seqs):
     return probs
 
 
-processed = done
 skipped = 0
 chunk = []
-t_start = time.time()
-last_report = t_start
 out = open(out_path, "a")
 
 
@@ -175,17 +190,6 @@ for s in iter_seqs(in_path):
         flush(chunk)
         processed += len(chunk)
         chunk = []
-        now = time.time()
-        if now - last_report >= 10:
-            rate = (processed - done) / max(1e-6, now - t_start)
-            msg = "  [BERT 进度] %d 条  %.0f 条/s" % (processed, rate)
-            if total:
-                eta = (total - processed) / max(rate, 1e-6)
-                msg += "  剩余约 %.1f 小时 (%.1f%%)" % (eta / 3600, 100.0 * processed / total)
-            if use_cuda:
-                msg += "  显存峰值 %.0f MB" % (torch.cuda.max_memory_allocated() / 1e6)
-            print(msg, flush=True)
-            last_report = now
 if chunk:
     flush(chunk)
     processed += len(chunk)
