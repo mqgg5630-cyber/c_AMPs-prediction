@@ -155,6 +155,7 @@ bash amp_pipeline/run_pipeline_one.sh <group.fa> <out_dir>
 | TF 打印 `未检测到可用 GPU` | 正常, TF1.14 GPU 需老 CUDA; 用 CPU 跑结果一致 |
 | `import tensorflow` 报 `Descriptors cannot not be created directly` | protobuf 太新(≥4), 与 TF1.14 不兼容。在 `camps-tf114` 里 `pip install "protobuf==3.19.6"` |
 | `setup_envs_mamba.sh` 显示某环境已存在就跳过 | 环境已建好则不会再改; 若只是 protobuf 没钉对, 手动按上一行修复即可 |
+| `import bert_sklearn` 报 `No module named 'pytorch_pretrained_bert'` | 需在 `py36` 里 `pip install "pytorch_pretrained_bert==0.6.1"` |
 | `py36` 里 `bert_sklearn` 导入失败 | 确认在 `bert_sklearn/` 内执行了 `pip install .` |
 | 想用三块真实 GPU 并行 | 仓库跑的是"三个模型",非三卡并行; 如需多卡请把 `test_models_gpu.sh`/预测脚本按 GPU id 拆成三份再分别 `CUDA_VISIBLE_DEVICES=0/1/2` 运行 |
 | 无网/内网机 | 把两个 env 的 conda-pack 打包装到目标机即可复用 |

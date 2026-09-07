@@ -129,6 +129,10 @@ maybe_setup_bert() {
     "$PIP" install "torch==1.10.0+cpu" -f https://download.pytorch.org/whl/torch_stable.html \
         || "$PIP" install "torch==1.10.0"
     "$PIP" install "numpy" "pandas" "scikit-learn" "regex" "tqdm" "boto3" "requests"
+    # bert_sklearn 的 sklearn.py / finetune.py 会 import 顶层 pytorch_pretrained_bert
+    # (repo setup.py 里写明 0.6.1), 必须装该 pip 包。
+    echo ">> 安装 pytorch_pretrained_bert==0.6.1 (bert_sklearn 依赖)..."
+    "$PIP" install "pytorch_pretrained_bert==0.6.1"
 
     echo ">> 安装本仓库自带 bert_sklearn (v0.2.0)..."
     # 说明: 该 repo 的 bert_sklearn/setup.py 位于包目录内部, `pip install .` 装不齐,
