@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ============================================================
+  Editable scientific review figure
+  Deep learning for antimicrobial peptide (AMP) prediction
+  ============================================================
+  How to edit:
+   * Every label is a real text element - click and retype.
+   * Each panel is a g[id] group - move it freely.
+   * Colors are plain hex values on each element.
+  Recommended editors: Adobe Illustrator, Figma, Inkscape,
+  PowerPoint (Insert > Pictures), or any text editor.
+============================================================ -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1040" viewBox="0 0 1560 1040"
+     font-family="Helvetica, Arial, sans-serif">
+  <title>Deep learning for antimicrobial peptide prediction - review figure</title>
+  <desc>Overview of the deep-learning workflow for AMP prediction: databases, feature encoding, architectures, evaluation, applications, challenges.</desc>
+
+  <!-- ================= canvas ================= -->
+  <rect x="0" y="0" width="1560" height="1040" fill="#F8FAFC"/>
+
+  <!-- ================= title ================= -->
+  <text x="780" y="54" text-anchor="middle" font-size="30" font-weight="bold" fill="#0F172A">Deep Learning for Antimicrobial Peptide Prediction</text>
+  <text x="780" y="82" text-anchor="middle" font-size="15" font-style="italic" fill="#64748B">From data resources and feature encoding to model architectures, rigorous evaluation and real-world applications</text>
+
+  <!-- ================= flow arrows between panels ================= -->
+  <g id="flow-arrows" stroke="#94A3B8" stroke-width="3.5" fill="#94A3B8">
+    <line x1="492" y1="308" x2="516" y2="308"/>
+    <polygon points="528,308 516,301 516,315" stroke="none"/>
+    <line x1="992" y1="308" x2="1016" y2="308"/>
+    <polygon points="1028,308 1016,301 1016,315" stroke="none"/>
+    <line x1="1280" y1="508" x2="1280" y2="540"/>
+    <polygon points="1280,554 1273,540 1287,540" stroke="none"/>
+    <line x1="1028" y1="756" x2="1004" y2="756"/>
+    <polygon points="992,756 1004,749 1004,763" stroke="none"/>
+    <line x1="528" y1="756" x2="504" y2="756"/>
+    <polygon points="492,756 504,749 504,763" stroke="none"/>
+  </g>
+
+  <!-- ================================================================
+       PANEL A  -  Data resources and curation  (blue)
+  ================================================================= -->
+  <g id="panelA" transform="translate(30,112)">
+    <rect x="0" y="0" width="460" height="392" rx="12" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 448 Q 460 0 460 12 V 44 Z" fill="#1D4ED8"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#1D4ED8">1</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Data Resources &amp; Curation</text>
+
+    <!-- databases -->
+    <g id="A-databases">
+      <g transform="translate(22,16)">
+        <ellipse cx="9" cy="4" rx="9" ry="3.5" fill="#BFDBFE" stroke="#2563EB" stroke-width="1.2"/>
+        <path d="M0,4 V16 A9,3.5 0 0 0 18,16 V4" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.2"/>
+      </g>
+      <text x="48" y="32" font-size="12" font-weight="bold" fill="#1E40AF">AMP DATABASES - EXPERIMENTALLY VALIDATED</text>
+      <g font-size="12" fill="#1E3A8A" text-anchor="middle">
+        <rect x="20"  y="46" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="84"  y="63">DRAMP 3.0</text>
+        <rect x="156" y="46" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="220" y="63">DBAASP v3</text>
+        <rect x="292" y="46" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="356" y="63">APD 3</text>
+        <rect x="20"  y="80" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="84"  y="97">LAMP 2</text>
+        <rect x="156" y="80" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="220" y="97">CAMP R3</text>
+        <rect x="292" y="80" width="128" height="26" rx="13" fill="#FFFFFF" stroke="#93C5FD" stroke-dasharray="4,3"/>
+        <text x="356" y="97" font-style="italic">+ many more</text>
+      </g>
+    </g>
+
+    <!-- positive / negative samples -->
+    <g id="A-samples">
+      <rect x="20" y="118" width="205" height="80" rx="8" fill="#F0FDF4" stroke="#86EFAC"/>
+      <circle cx="36" cy="133" r="8" fill="#16A34A"/>
+      <path d="M31.5,133 l3,3.2 5,-6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="50" y="137" font-size="13" font-weight="bold" fill="#14532D">Positive samples</text>
+      <text x="32" y="156" font-size="10.8" fill="#334155">experimentally validated AMPs</text>
+      <text x="32" y="170" font-size="10.8" fill="#334155">typical length 5-100 aa</text>
+      <text x="32" y="184" font-size="10.8" fill="#334155">e.g. defensins, cathelicidins</text>
+
+      <rect x="235" y="118" width="205" height="80" rx="8" fill="#FFF1F2" stroke="#FDA4AF"/>
+      <circle cx="251" cy="133" r="8" fill="#E11D48"/>
+      <path d="M247.5,129.5 l7,7 M254.5,129.5 l-7,7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+      <text x="265" y="137" font-size="13" font-weight="bold" fill="#9F1239">Negative samples</text>
+      <text x="247" y="156" font-size="10.8" fill="#334155">non-AMP peptides / proteins</text>
+      <text x="247" y="170" font-size="10.8" fill="#334155">from UniProt (randomly</text>
+      <text x="247" y="184" font-size="10.8" fill="#334155">sampled, quality-filtered)</text>
+    </g>
+
+    <!-- curation -->
+    <g id="A-curation">
+      <g transform="translate(20,220)">
+        <path d="M0,0 H18 L11,8 V14 L7,17 V8 Z" fill="#93C5FD" stroke="#2563EB" stroke-width="1" stroke-linejoin="round"/>
+      </g>
+      <text x="48" y="234" font-size="12" font-weight="bold" fill="#1E40AF">CURATION &amp; PREPROCESSING</text>
+      <g font-size="12" fill="#334155">
+        <path d="M24,240 l7,4 -7,4 z" fill="#3B82F6"/>
+        <text x="38" y="250">CD-HIT / MMseqs2 redundancy removal</text>
+        <path d="M24,264 l7,4 -7,4 z" fill="#3B82F6"/>
+        <text x="38" y="274">length &amp; residue-validity filtering</text>
+        <path d="M24,288 l7,4 -7,4 z" fill="#3B82F6"/>
+        <text x="38" y="298">class balancing: resampling / weighted loss</text>
+        <path d="M24,312 l7,4 -7,4 z" fill="#3B82F6"/>
+        <text x="38" y="322">train / validation / independent test split</text>
+      </g>
+      <!-- mini flow -->
+      <g font-size="11" fill="#1E40AF" text-anchor="middle">
+        <rect x="20"  y="340" width="88" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="64"  y="359">Raw data</text>
+        <rect x="130" y="340" width="88" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="174" y="359">Deduplicate</text>
+        <rect x="240" y="340" width="88" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="284" y="359">Cluster</text>
+        <rect x="350" y="340" width="88" height="30" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+        <text x="394" y="359">Balanced set</text>
+        <line x1="110" y1="355" x2="126" y2="355" stroke="#60A5FA" stroke-width="1.8"/>
+        <line x1="220" y1="355" x2="236" y2="355" stroke="#60A5FA" stroke-width="1.8"/>
+        <line x1="330" y1="355" x2="346" y2="355" stroke="#60A5FA" stroke-width="1.8"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ================================================================
+       PANEL B  -  Feature encoding  (teal)
+  ================================================================= -->
+  <g id="panelB" transform="translate(530,112)">
+    <rect x="0" y="0" width="460" height="392" rx="12" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 448 Q 460 0 460 12 V 44 Z" fill="#0F766E"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#0F766E">2</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Feature Encoding &amp; Representation</text>
+
+    <text x="20" y="32" font-size="12" font-weight="bold" fill="#0F766E">HAND-CRAFTED DESCRIPTORS</text>
+    <text x="250" y="32" font-size="12" font-weight="bold" fill="#0F766E">LEARNED EMBEDDINGS</text>
+
+    <!-- hand-crafted feature boxes -->
+    <g id="B-handcrafted">
+      <rect x="20" y="42" width="215" height="62" rx="8" fill="#FFFFFF" stroke="#99F6E4"/>
+      <text x="32" y="64" font-size="12.5" font-weight="bold" fill="#0F766E">One-hot / binary coding</text>
+      <text x="32" y="84" font-size="11" fill="#475569">20-dim residue indicator vectors</text>
+
+      <rect x="20" y="112" width="215" height="62" rx="8" fill="#FFFFFF" stroke="#99F6E4"/>
+      <text x="32" y="134" font-size="12.5" font-weight="bold" fill="#0F766E">Compositional counts</text>
+      <text x="32" y="154" font-size="11" fill="#475569">AAC, DPC, CKSAAP, APAAC</text>
+
+      <rect x="20" y="182" width="215" height="62" rx="8" fill="#FFFFFF" stroke="#99F6E4"/>
+      <text x="32" y="202" font-size="12.5" font-weight="bold" fill="#0F766E">Physicochemical properties</text>
+      <text x="32" y="219" font-size="11" fill="#475569">net charge, pI, hydrophobicity,</text>
+      <text x="32" y="233" font-size="11" fill="#475569">hydrophobic moment, MW</text>
+
+      <rect x="20" y="252" width="215" height="62" rx="8" fill="#FFFFFF" stroke="#99F6E4"/>
+      <text x="32" y="274" font-size="12.5" font-weight="bold" fill="#0F766E">Evolutionary profiles</text>
+      <text x="32" y="294" font-size="11" fill="#475569">PSSM (BLAST), HMM (HHblits)</text>
+    </g>
+
+    <!-- PLM embeddings -->
+    <g id="B-plm">
+      <rect x="250" y="42" width="190" height="272" rx="8" fill="#FFFFFF" stroke="#2DD4BF" stroke-width="1.5"/>
+      <text x="262" y="64" font-size="12.5" font-weight="bold" fill="#0F766E">Pre-trained protein</text>
+      <text x="262" y="80" font-size="12.5" font-weight="bold" fill="#0F766E">language models</text>
+      <g font-size="11" fill="#134E4A" text-anchor="middle">
+        <rect x="262" y="90"  width="82" height="22" rx="11" fill="#CCFBF1"/>
+        <text x="303" y="105">ESM-2</text>
+        <rect x="350" y="90"  width="82" height="22" rx="11" fill="#CCFBF1"/>
+        <text x="391" y="105">ProtT5</text>
+        <rect x="262" y="118" width="82" height="22" rx="11" fill="#CCFBF1"/>
+        <text x="303" y="133">ProtBERT</text>
+        <rect x="350" y="118" width="82" height="22" rx="11" fill="#CCFBF1"/>
+        <text x="391" y="133">BERT-BFD</text>
+      </g>
+      <text x="262" y="158" font-size="10.5" fill="#64748B">self-supervised, billions of sequences</text>
+      <!-- sequence -> embedding -->
+      <g font-size="10" text-anchor="middle">
+        <rect x="262" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="271" y="181" fill="#0F766E">K</text>
+        <rect x="282" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="291" y="181" fill="#0F766E">W</text>
+        <rect x="302" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="311" y="181" fill="#0F766E">K</text>
+        <rect x="322" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="331" y="181" fill="#0F766E">L</text>
+        <rect x="342" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="351" y="181" fill="#0F766E">F</text>
+        <rect x="362" y="168" width="18" height="18" rx="3" fill="#F0FDFA" stroke="#5EEAD4"/>
+        <text x="371" y="181" fill="#0F766E">K</text>
+        <line x1="356" y1="190" x2="356" y2="204" stroke="#0D9488" stroke-width="1.8"/>
+        <polygon points="356,210 351,201 361,201" fill="#0D9488"/>
+      </g>
+      <g id="B-embedding-grid">
+        <rect x="262" y="216" width="13" height="9" fill="#0F766E"/>
+        <rect x="276" y="216" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="290" y="216" width="13" height="9" fill="#99F6E4"/>
+        <rect x="304" y="216" width="13" height="9" fill="#14B8A6"/>
+        <rect x="318" y="216" width="13" height="9" fill="#CCFBF1"/>
+        <rect x="332" y="216" width="13" height="9" fill="#0D9488"/>
+        <rect x="346" y="216" width="13" height="9" fill="#99F6E4"/>
+        <rect x="360" y="216" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="374" y="216" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="388" y="216" width="13" height="9" fill="#0F766E"/>
+        <rect x="402" y="216" width="13" height="9" fill="#14B8A6"/>
+        <rect x="262" y="227" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="276" y="227" width="13" height="9" fill="#CCFBF1"/>
+        <rect x="290" y="227" width="13" height="9" fill="#0F766E"/>
+        <rect x="304" y="227" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="318" y="227" width="13" height="9" fill="#99F6E4"/>
+        <rect x="332" y="227" width="13" height="9" fill="#14B8A6"/>
+        <rect x="346" y="227" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="360" y="227" width="13" height="9" fill="#0D9488"/>
+        <rect x="374" y="227" width="13" height="9" fill="#CCFBF1"/>
+        <rect x="388" y="227" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="402" y="227" width="13" height="9" fill="#0F766E"/>
+        <rect x="262" y="238" width="13" height="9" fill="#99F6E4"/>
+        <rect x="276" y="238" width="13" height="9" fill="#14B8A6"/>
+        <rect x="290" y="238" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="304" y="238" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="318" y="238" width="13" height="9" fill="#0F766E"/>
+        <rect x="332" y="238" width="13" height="9" fill="#99F6E4"/>
+        <rect x="346" y="238" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="360" y="238" width="13" height="9" fill="#CCFBF1"/>
+        <rect x="374" y="238" width="13" height="9" fill="#0D9488"/>
+        <rect x="388" y="238" width="13" height="9" fill="#14B8A6"/>
+        <rect x="402" y="238" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="262" y="249" width="13" height="9" fill="#CCFBF1"/>
+        <rect x="276" y="249" width="13" height="9" fill="#0D9488"/>
+        <rect x="290" y="249" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="304" y="249" width="13" height="9" fill="#0F766E"/>
+        <rect x="318" y="249" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="332" y="249" width="13" height="9" fill="#14B8A6"/>
+        <rect x="346" y="249" width="13" height="9" fill="#99F6E4"/>
+        <rect x="360" y="249" width="13" height="9" fill="#0F766E"/>
+        <rect x="374" y="249" width="13" height="9" fill="#2DD4BF"/>
+        <rect x="388" y="249" width="13" height="9" fill="#5EEAD4"/>
+        <rect x="402" y="249" width="13" height="9" fill="#0D9488"/>
+      </g>
+      <text x="262" y="278" font-size="10.5" fill="#64748B">contextual per-residue embeddings,</text>
+      <text x="262" y="292" font-size="10.5" fill="#64748B">pooled to a fixed-length vector</text>
+    </g>
+
+    <!-- hybrid -->
+    <g id="B-hybrid">
+      <rect x="20" y="326" width="420" height="50" rx="8" fill="#CCFBF1"/>
+      <circle cx="40" cy="351" r="11" fill="#0F766E"/>
+      <text x="40" y="356" text-anchor="middle" font-size="15" font-weight="bold" fill="#FFFFFF">+</text>
+      <text x="60" y="347" font-size="12.5" font-weight="bold" fill="#134E4A">Hybrid representation strategy</text>
+      <text x="60" y="364" font-size="11.5" fill="#134E4A">concatenate hand-crafted descriptors with PLM embeddings</text>
+    </g>
+  </g>
+
+  <!-- ================================================================
+       PANEL C  -  Deep learning architectures  (violet)
+  ================================================================= -->
+  <g id="panelC" transform="translate(1030,112)">
+    <rect x="0" y="0" width="500" height="392" rx="12" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 488 Q 500 0 500 12 V 44 Z" fill="#6D28D9"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#6D28D9">3</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Deep Learning Architectures</text>
+
+    <!-- card 1: CNN -->
+    <g id="C-cnn">
+      <rect x="20" y="52" width="225" height="128" rx="10" fill="#FFFFFF" stroke="#DDD6FE"/>
+      <rect x="32" y="64" width="38" height="30" rx="6" fill="#F5F3FF" stroke="#DDD6FE"/>
+      <g transform="translate(38,69)">
+        <rect x="0"  y="0" width="6" height="6" fill="#EDE9FE"/>
+        <rect x="8"  y="0" width="6" height="6" fill="#7C3AED"/>
+        <rect x="16" y="0" width="6" height="6" fill="#EDE9FE"/>
+        <rect x="0"  y="8" width="6" height="6" fill="#7C3AED"/>
+        <rect x="8"  y="8" width="6" height="6" fill="#7C3AED"/>
+        <rect x="16" y="8" width="6" height="6" fill="#A78BFA"/>
+        <rect x="0"  y="16" width="6" height="6" fill="#EDE9FE"/>
+        <rect x="8"  y="16" width="6" height="6" fill="#7C3AED"/>
+        <rect x="16" y="16" width="6" height="6" fill="#EDE9FE"/>
+      </g>
+      <text x="82" y="84" font-size="13.5" font-weight="bold" fill="#5B21B6">CNN / DeepCNN</text>
+      <text x="32" y="112" font-size="11" fill="#475569">local motif detection with</text>
+      <text x="32" y="127" font-size="11" fill="#475569">convolutional filters + pooling,</text>
+      <text x="32" y="142" font-size="11" fill="#475569">robust to motif translation</text>
+    </g>
+
+    <!-- card 2: RNN -->
+    <g id="C-rnn">
+      <rect x="255" y="52" width="225" height="128" rx="10" fill="#FFFFFF" stroke="#DDD6FE"/>
+      <rect x="267" y="64" width="38" height="30" rx="6" fill="#F5F3FF" stroke="#DDD6FE"/>
+      <g transform="translate(272,72)">
+        <rect x="0"  y="0" width="9" height="11" rx="2" fill="#7C3AED"/>
+        <rect x="14" y="0" width="9" height="11" rx="2" fill="#A78BFA"/>
+        <rect x="28" y="0" width="9" height="11" rx="2" fill="#C4B5FD"/>
+        <line x1="9"  y1="5.5" x2="13" y2="5.5" stroke="#7C3AED" stroke-width="1.5"/>
+        <line x1="23" y1="5.5" x2="27" y2="5.5" stroke="#7C3AED" stroke-width="1.5"/>
+      </g>
+      <text x="317" y="84" font-size="13.5" font-weight="bold" fill="#5B21B6">RNN / BiLSTM / GRU</text>
+      <text x="267" y="112" font-size="11" fill="#475569">residue order &amp; sequential context</text>
+      <text x="267" y="127" font-size="11" fill="#475569">from forward + backward passes;</text>
+      <text x="267" y="142" font-size="11" fill="#475569">handles variable-length peptides</text>
+    </g>
+
+    <!-- card 3: Transformer -->
+    <g id="C-transformer">
+      <rect x="20" y="192" width="225" height="128" rx="10" fill="#FFFFFF" stroke="#DDD6FE"/>
+      <rect x="32" y="204" width="38" height="30" rx="6" fill="#F5F3FF" stroke="#DDD6FE"/>
+      <g transform="translate(51,219)" stroke="#7C3AED" fill="none" stroke-width="1.4">
+        <line x1="0" y1="0" x2="0" y2="-9"/><line x1="0" y1="0" x2="8" y2="5"/>
+        <line x1="0" y1="0" x2="-8" y2="5"/>
+        <circle cx="0" cy="-9" r="2.6" fill="#7C3AED" stroke="none"/>
+        <circle cx="8" cy="5" r="2.6" fill="#A78BFA" stroke="none"/>
+        <circle cx="-8" cy="5" r="2.6" fill="#A78BFA" stroke="none"/>
+        <circle cx="0" cy="0" r="3.2" fill="#7C3AED" stroke="none"/>
+        <path d="M -12,-3 Q 0,-14 12,-3" stroke-dasharray="2.5,2"/>
+      </g>
+      <text x="82" y="224" font-size="13.5" font-weight="bold" fill="#5B21B6">Transformer / Attention</text>
+      <text x="32" y="252" font-size="11" fill="#475569">multi-head self-attention models</text>
+      <text x="32" y="267" font-size="11" fill="#475569">long-range residue interactions;</text>
+      <text x="32" y="282" font-size="11" fill="#475569">PLM encoders fine-tuned on AMPs</text>
+    </g>
+
+    <!-- card 4: Hybrid -->
+    <g id="C-hybrid">
+      <rect x="255" y="192" width="225" height="128" rx="10" fill="#FFFFFF" stroke="#DDD6FE"/>
+      <rect x="267" y="204" width="38" height="30" rx="6" fill="#F5F3FF" stroke="#DDD6FE"/>
+      <g transform="translate(273,209)">
+        <rect x="0" y="0"  width="26" height="5" rx="2.5" fill="#7C3AED"/>
+        <rect x="0" y="8"  width="26" height="5" rx="2.5" fill="#A78BFA"/>
+        <rect x="0" y="16" width="26" height="5" rx="2.5" fill="#C4B5FD"/>
+        <circle cx="32" cy="10.5" r="3" fill="#7C3AED"/>
+      </g>
+      <text x="317" y="224" font-size="13.5" font-weight="bold" fill="#5B21B6">Hybrid architectures</text>
+      <text x="267" y="252" font-size="11" fill="#475569">complementary local + global views;</text>
+      <text x="267" y="267" font-size="11" fill="#475569">most popular in AMP predictors;</text>
+      <text x="267" y="282" font-size="11" fill="#475569">GNNs for structure-aware input</text>
+    </g>
+
+    <!-- output strip -->
+    <rect x="20" y="332" width="460" height="36" rx="8" fill="#EDE9FE"/>
+    <text x="250" y="355" text-anchor="middle" font-size="11.5" fill="#4C1D95">Output head: FC layer, sigmoid / softmax, P(AMP)&#160;&#160;&#160;|&#160;&#160;&#160;Loss: cross-entropy / focal loss</text>
+  </g>
+
+  <!-- ================================================================
+       PANEL D  -  Training and evaluation  (amber)
+  ================================================================= -->
+  <g id="panelD" transform="translate(1030,560)">
+    <rect x="0" y="0" width="500" height="392" rx="12" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 488 Q 500 0 500 12 V 44 Z" fill="#B45309"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#B45309">4</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Model Training &amp; Evaluation</text>
+
+    <!-- training protocol -->
+    <g id="D-training">
+      <rect x="20" y="46" width="230" height="118" rx="8" fill="#FFFFFF" stroke="#FDE68A"/>
+      <text x="30" y="66" font-size="11.5" font-weight="bold" fill="#92400E">TRAINING &amp; VALIDATION PROTOCOL</text>
+      <g font-size="10.8" fill="#475569">
+        <circle cx="34" cy="82" r="2.5" fill="#F59E0B"/><text x="44" y="86">stratified 5 / 10-fold cross-validation</text>
+        <circle cx="34" cy="100" r="2.5" fill="#F59E0B"/><text x="44" y="104">independent external test set</text>
+        <circle cx="34" cy="118" r="2.5" fill="#F59E0B"/><text x="44" y="122">Adam optimizer + early stopping</text>
+        <circle cx="34" cy="136" r="2.5" fill="#F59E0B"/><text x="44" y="140">dropout, L2, batch normalization</text>
+      </g>
+    </g>
+
+    <!-- confusion matrix -->
+    <g id="D-confusion">
+      <rect x="20" y="176" width="230" height="120" rx="8" fill="#FFFFFF" stroke="#FDE68A"/>
+      <text x="30" y="196" font-size="11.5" font-weight="bold" fill="#92400E">CONFUSION MATRIX</text>
+      <g font-size="10.5" text-anchor="middle" font-weight="bold">
+        <text x="105" y="214" font-size="9.5" fill="#92400E">AMP</text>
+        <text x="195" y="214" font-size="9.5" fill="#92400E">non-AMP</text>
+        <rect x="66"  y="220" width="80" height="26" rx="4" fill="#DCFCE7" stroke="#86EFAC"/>
+        <text x="106" y="237" fill="#166534">TP</text>
+        <rect x="152" y="220" width="80" height="26" rx="4" fill="#FEE2E2" stroke="#FECACA"/>
+        <text x="192" y="237" fill="#991B1B">FP</text>
+        <rect x="66"  y="252" width="80" height="26" rx="4" fill="#FEE2E2" stroke="#FECACA"/>
+        <text x="106" y="269" fill="#991B1B">FN</text>
+        <rect x="152" y="252" width="80" height="26" rx="4" fill="#DCFCE7" stroke="#86EFAC"/>
+        <text x="192" y="269" fill="#166534">TN</text>
+      </g>
+      <g font-size="9.5" fill="#92400E" text-anchor="end">
+        <text x="60" y="237">AMP</text>
+        <text x="60" y="269">non-AMP</text>
+      </g>
+      <text x="30" y="290" font-size="9" font-style="italic" fill="#A16207">rows: actual class&#160;&#160;columns: predicted class</text>
+    </g>
+
+    <!-- ROC -->
+    <g id="D-roc">
+      <rect x="270" y="46" width="210" height="250" rx="8" fill="#FFFFFF" stroke="#FDE68A"/>
+      <text x="282" y="66" font-size="11.5" font-weight="bold" fill="#92400E">ROC ANALYSIS</text>
+      <path d="M292,88 V244 H452" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+      <line x1="292" y1="244" x2="452" y2="88" stroke="#CBD5E1" stroke-width="1.3" stroke-dasharray="5,4"/>
+      <path d="M292,244 C336,150 408,98 452,88 L452,244 Z" fill="#FEF3C7" opacity="0.7"/>
+      <path d="M292,244 C336,150 408,98 452,88" fill="none" stroke="#F59E0B" stroke-width="3"/>
+      <text x="336" y="128" font-size="11" font-weight="bold" fill="#B45309">AUC = 0.97</text>
+      <text x="358" y="172" font-size="8.5" fill="#94A3B8">chance</text>
+      <text x="372" y="260" text-anchor="middle" font-size="10" fill="#64748B">1 - Sp (FPR)</text>
+      <text x="298" y="80" font-size="10" fill="#64748B">Sn (TPR)</text>
+    </g>
+
+    <!-- metrics -->
+    <g id="D-metrics">
+      <rect x="20" y="306" width="460" height="76" rx="8" fill="#FEF9C3" stroke="#FDE68A"/>
+      <text x="30" y="324" font-size="11.5" font-weight="bold" fill="#92400E">EVALUATION METRICS</text>
+      <g font-family="Courier New, Courier, monospace" font-size="11" fill="#78350F">
+        <text x="30" y="341">Sn = TP/(TP+FN)&#160;&#160;&#160;&#160;Sp = TN/(TN+FP)&#160;&#160;&#160;&#160;BAcc = (Sn+Sp)/2</text>
+        <text x="30" y="356">Acc = (TP+TN)/(TP+TN+FP+FN)</text>
+        <text x="30" y="371">MCC = (TP×TN - FP×FN) / sqrt[(TP+FP)(TP+FN)(TN+FP)(TN+FN)]</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ================================================================
+       PANEL E  -  Applications  (green)
+  ================================================================= -->
+  <g id="panelE" transform="translate(530,560)">
+    <rect x="0" y="0" width="460" height="392" rx="12" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 448 Q 460 0 460 12 V 44 Z" fill="#15803D"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#15803D">5</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Applications &amp; Tools</text>
+
+    <!-- card 1 -->
+    <g id="E-screening">
+      <rect x="20" y="46" width="420" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+      <circle cx="44" cy="77" r="13" fill="#DCFCE7" stroke="#22C55E"/>
+      <circle cx="41" cy="74" r="5" fill="none" stroke="#15803D" stroke-width="2"/>
+      <line x1="45" y1="78" x2="50" y2="83" stroke="#15803D" stroke-width="2" stroke-linecap="round"/>
+      <text x="66" y="71" font-size="13" font-weight="bold" fill="#166534">Large-scale in silico screening</text>
+      <text x="66" y="87" font-size="11" fill="#475569">scan genomes, metagenomes &amp; microbiome sORFs for candidate AMPs</text>
+      <text x="66" y="101" font-size="11" fill="#475569">(e.g. gut microbiome mining)</text>
+    </g>
+
+    <!-- card 2 -->
+    <g id="E-multifunc">
+      <rect x="20" y="116" width="420" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+      <circle cx="44" cy="147" r="13" fill="#DCFCE7" stroke="#22C55E"/>
+      <circle cx="44" cy="147" r="6.5" fill="none" stroke="#15803D" stroke-width="1.7"/>
+      <circle cx="44" cy="147" r="3" fill="none" stroke="#15803D" stroke-width="1.7"/>
+      <circle cx="44" cy="147" r="1.2" fill="#15803D"/>
+      <text x="66" y="141" font-size="13" font-weight="bold" fill="#166534">Multi-functional classification</text>
+      <text x="66" y="157" font-size="11" fill="#475569">antibacterial (Gram+ / Gram-), antifungal, antiviral,</text>
+      <text x="66" y="171" font-size="11" fill="#475569">anti-biofilm &amp; anticancer peptides</text>
+    </g>
+
+    <!-- card 3 -->
+    <g id="E-design">
+      <rect x="20" y="186" width="420" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+      <circle cx="44" cy="217" r="13" fill="#DCFCE7" stroke="#22C55E"/>
+      <path d="M44,209.5 l1.9,5.6 5.6,1.9 -5.6,1.9 -1.9,5.6 -1.9,-5.6 -5.6,-1.9 5.6,-1.9 z" fill="#15803D"/>
+      <text x="66" y="211" font-size="13" font-weight="bold" fill="#166534">De novo AMP design</text>
+      <text x="66" y="227" font-size="11" fill="#475569">generative models - GAN, VAE, diffusion, LLM-based;</text>
+      <text x="66" y="241" font-size="11" fill="#475569">optimize potency &amp; low toxicity</text>
+    </g>
+
+    <!-- card 4 -->
+    <g id="E-deploy">
+      <rect x="20" y="256" width="420" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+      <circle cx="44" cy="287" r="13" fill="#DCFCE7" stroke="#22C55E"/>
+      <circle cx="44" cy="287" r="6.5" fill="none" stroke="#15803D" stroke-width="1.6"/>
+      <ellipse cx="44" cy="287" rx="6.5" ry="2.7" fill="none" stroke="#15803D" stroke-width="1.2"/>
+      <line x1="44" y1="280.5" x2="44" y2="293.5" stroke="#15803D" stroke-width="1.2"/>
+      <text x="66" y="281" font-size="13" font-weight="bold" fill="#166534">Web servers &amp; stand-alone tools</text>
+      <text x="66" y="297" font-size="11" fill="#475569">user-friendly deployment for experimental</text>
+      <text x="66" y="311" font-size="11" fill="#475569">biologists &amp; clinicians</text>
+    </g>
+
+    <!-- tools -->
+    <text x="20" y="342" font-size="11.5" font-weight="bold" fill="#166534">Representative predictors:</text>
+    <g font-size="10.5" fill="#14532D" text-anchor="middle">
+      <rect x="20"  y="350" width="48" height="24" rx="12" fill="#FFFFFF" stroke="#86EFAC"/>
+      <text x="44"  y="366">ampir</text>
+      <rect x="76"  y="350" width="60" height="24" rx="12" fill="#FFFFFF" stroke="#86EFAC"/>
+      <text x="106" y="366">AMPlify</text>
+      <rect x="144" y="350" width="66" height="24" rx="12" fill="#FFFFFF" stroke="#86EFAC"/>
+      <text x="177" y="366">AMP-BERT</text>
+      <rect x="218" y="350" width="92" height="24" rx="12" fill="#FFFFFF" stroke="#86EFAC"/>
+      <text x="264" y="366">Deep-AmPEP30</text>
+      <rect x="318" y="350" width="98" height="24" rx="12" fill="#FFFFFF" stroke="#86EFAC"/>
+      <text x="367" y="366">AMP Scanner II</text>
+    </g>
+  </g>
+
+  <!-- ================================================================
+       PANEL F  -  Challenges  (rose)
+  ================================================================= -->
+  <g id="panelF" transform="translate(30,560)">
+    <rect x="0" y="0" width="460" height="392" rx="12" fill="#FFF1F2" stroke="#FECDD3" stroke-width="1.5"/>
+    <path d="M 0 44 V 12 Q 0 0 12 0 H 448 Q 460 0 460 12 V 44 Z" fill="#BE123C"/>
+    <circle cx="26" cy="22" r="13" fill="#FFFFFF"/>
+    <text x="26" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#BE123C">6</text>
+    <text x="48" y="28" font-size="16.5" font-weight="bold" fill="#FFFFFF">Challenges &amp; Perspectives</text>
+
+    <!-- item 1 -->
+    <g id="F-data">
+      <circle cx="36" cy="68" r="12" fill="#FFE4E6" stroke="#FB7185"/>
+      <path d="M36,61.5 l6.5,10.5 h-13 z" fill="none" stroke="#BE123C" stroke-width="1.6" stroke-linejoin="round"/>
+      <line x1="36" y1="65.5" x2="36" y2="68.5" stroke="#BE123C" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="36" cy="70.8" r="0.9" fill="#BE123C"/>
+      <text x="58" y="66" font-size="12.5" font-weight="bold" fill="#9F1239">Data quality &amp; scale</text>
+      <text x="58" y="82" font-size="11" fill="#475569">small, imbalanced, biased datasets; unreliable</text>
+      <text x="58" y="96" font-size="11" fill="#475569">negatives; benchmark leakage inflates accuracy</text>
+    </g>
+    <line x1="20" y1="108" x2="440" y2="108" stroke="#FECDD3" stroke-dasharray="4,4"/>
+
+    <!-- item 2 -->
+    <g id="F-labels">
+      <circle cx="36" cy="132" r="12" fill="#FFE4E6" stroke="#FB7185"/>
+      <path d="M30,127 h6.5 l5,5 -6.5,6.5 -5,-5 z" fill="none" stroke="#BE123C" stroke-width="1.5" stroke-linejoin="round"/>
+      <circle cx="34" cy="131" r="1.1" fill="#BE123C"/>
+      <text x="58" y="130" font-size="12.5" font-weight="bold" fill="#9F1239">Beyond binary labels</text>
+      <text x="58" y="146" font-size="11" fill="#475569">quantify activity (MIC) &amp; strain specificity;</text>
+      <text x="58" y="160" font-size="11" fill="#475569">regression + multi-task learning needed</text>
+    </g>
+    <line x1="20" y1="172" x2="440" y2="172" stroke="#FECDD3" stroke-dasharray="4,4"/>
+
+    <!-- item 3 -->
+    <g id="F-interp">
+      <circle cx="36" cy="196" r="12" fill="#FFE4E6" stroke="#FB7185"/>
+      <path d="M28,196 Q36,187.5 44,196 Q36,204.5 28,196 Z" fill="none" stroke="#BE123C" stroke-width="1.5"/>
+      <circle cx="36" cy="196" r="2.6" fill="#BE123C"/>
+      <text x="58" y="194" font-size="12.5" font-weight="bold" fill="#9F1239">Interpretability &amp; trust</text>
+      <text x="58" y="210" font-size="11" fill="#475569">attention maps, motif discovery, SHAP-based</text>
+      <text x="58" y="224" font-size="11" fill="#475569">explanations for transparent decisions</text>
+    </g>
+    <line x1="20" y1="236" x2="440" y2="236" stroke="#FECDD3" stroke-dasharray="4,4"/>
+
+    <!-- item 4 -->
+    <g id="F-structure">
+      <circle cx="36" cy="260" r="12" fill="#FFE4E6" stroke="#FB7185"/>
+      <path d="M36,251 l7,4 v8 l-7,4 -7,-4 v-8 z" fill="none" stroke="#BE123C" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M36,259 v8 M29,255 l7,4 7,-4 M29,263 l7,-4 7,4" fill="none" stroke="#BE123C" stroke-width="1"/>
+      <text x="58" y="258" font-size="12.5" font-weight="bold" fill="#9F1239">Structure-aware modeling</text>
+      <text x="58" y="274" font-size="11" fill="#475569">AlphaFold / ESMFold features, GNNs, explicit</text>
+      <text x="58" y="288" font-size="11" fill="#475569">helix-hinge &amp; amphipathic pattern encoding</text>
+    </g>
+    <line x1="20" y1="300" x2="440" y2="300" stroke="#FECDD3" stroke-dasharray="4,4"/>
+
+    <!-- item 5 -->
+    <g id="F-loop">
+      <circle cx="36" cy="324" r="12" fill="#FFE4E6" stroke="#FB7185"/>
+      <path d="M41,318.5 A7,7 0 1 0 42.5,327" fill="none" stroke="#BE123C" stroke-width="1.8"/>
+      <polygon points="44.5,331.5 39.5,328 44,325.2" fill="#BE123C"/>
+      <text x="58" y="322" font-size="12.5" font-weight="bold" fill="#9F1239">Wet-lab closed loop</text>
+      <text x="58" y="338" font-size="11" fill="#475569">active learning + high-throughput synthesis &amp;</text>
+      <text x="58" y="352" font-size="11" fill="#475569">MIC assays (design - build - test - learn cycle)</text>
+    </g>
+  </g>
+
+  <!-- ================= figure caption ================= -->
+  <text x="780" y="1000" text-anchor="middle" font-size="12.5" font-style="italic" fill="#475569">Figure 1 | The deep-learning workflow for antimicrobial peptide (AMP) prediction: curated AMP databases feed hand-crafted descriptors and protein-language-model (PLM)</text>
+  <text x="780" y="1018" text-anchor="middle" font-size="12.5" font-style="italic" fill="#475569">embeddings into CNN, BiLSTM, Transformer and hybrid architectures, whose rigorous cross-validated evaluation enables screening, multi-functional prediction and design.</text>
+</svg>
