@@ -25,6 +25,19 @@ PROJECT_DIR="${3:-$(dirname "$SCRIPT_DIR")}"                 # script/ 上一级
 ENV_TF="${4:-/home/w26/miniconda3/envs/camps-tf114}"
 ENV_BERT="${5:-/home/w26/miniconda3/envs/py36}"
 
+# ---------- 环境探测: 若给出的路径不存在, 按常见位置/环境名自动搜寻 ----------
+find_env() {
+    local want="$1" name="$2" found=""
+    [ -x "$want/bin/python" ] && { echo "$want"; return; }
+    for base in "$HOME/miniconda3" "$HOME/miniforge3" "$HOME/anaconda3"; do
+        if [ -x "$base/envs/$name/bin/python" ]; then found="$base/envs/$name"; break; fi
+    done
+    if [ -z "$found" ]; then found="$want"; fi   # 找不到就保留原路径(让下方预检如实报错)
+    echo "$found"
+}
+ENV_TF="$(find_env "$ENV_TF" camps-tf114)"
+ENV_BERT="$(find_env "$ENV_BERT" py36)"
+
 # BERT 运行时环境: 默认 auto 探测 GPU (有 CUDA 自动开启), 支持大批次加速 (适配 4GB 显存显卡)
 export BERT_NUM_WORKERS="${BERT_NUM_WORKERS:-0}"
 export BERT_USE_CUDA="${BERT_USE_CUDA:-auto}"
