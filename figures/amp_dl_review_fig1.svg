@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1060" viewBox="0 0 1560 1060" font-family="Helvetica, Arial, sans-serif">
-<title>Deep learning for antimicrobial peptide prediction</title>
-<desc>Graphical abstract. Peptide sources (microbiomes, metagenomes, databases) feed deep-learning predictors (CNN, LSTM, Transformer) that rank antimicrobial candidates for wet-lab validation and clinical translation; leads kill bacteria by selective membrane disruption.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="amp-dl-review-fig1-title amp-dl-review-fig1-desc" width="1560" height="1060" viewBox="0 0 1560 1060" font-family="Helvetica, Arial, sans-serif">
+<title id="amp-dl-review-fig1-title">Deep learning for antimicrobial peptide prediction</title>
+<desc id="amp-dl-review-fig1-desc">Graphical abstract. Peptide sources (microbiomes, metagenomes, databases) feed deep-learning predictors (CNN, LSTM, Transformer) that rank antimicrobial candidates for wet-lab validation and clinical translation; leads kill bacteria by selective membrane disruption.</desc>
 <defs>
 <radialGradient id="gBlue" cx="0.35" cy="0.3" r="0.85"><stop offset="0%" stop-color="#9EC7FF" stop-opacity="1"/><stop offset="55%" stop-color="#6492D3" stop-opacity="1"/><stop offset="100%" stop-color="#2B5EA7" stop-opacity="1"/></radialGradient>
 <radialGradient id="gRed" cx="0.35" cy="0.3" r="0.85"><stop offset="0%" stop-color="#FFB4A0" stop-opacity="1"/><stop offset="55%" stop-color="#E17865" stop-opacity="1"/><stop offset="100%" stop-color="#C43D2B" stop-opacity="1"/></radialGradient>

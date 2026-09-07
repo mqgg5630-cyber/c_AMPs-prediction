@@ -1,6 +1,6 @@
 # Review Figures — Illustrated (BioRender-style) SVGs
 
-Two graphical-abstract figures, both 100% native editable SVG built from
+Three graphical-abstract figures, all 100% native editable SVG built from
 glossy illustrated icons (gradients + flat shapes, renderer-safe opacities,
 no raster/filter effects). Story flows a-f through tinted zones with
 chunky letter chips; text is kept to short captions.
@@ -37,11 +37,26 @@ f Products (soup bowl, soy-sauce bottle, salt shaker with reduction arrow,
 cutlery, balanced-meal plate, instant-noodle cup, banner plus a
 healthy/natural/tasty icon trio).
 
-**Editing** - zones are named groups `zone-a`...`zone-f`; every icon is plain
-paths/ellipses referencing one `<defs>` gradient block (recolor globally).
-Generators kept out of the repo; export via PDF/EPS or 600-dpi TIFF.
+## Figure 3 — P. gingivalis / periodontal-to-Alzheimer mechanism
+`pg_ad_mechanism_fig1.svg` (master) + `.pdf` (vector) + `.png` (2340x1590)
 
-**Journal compliance** - both figures ship as editable SVG (master), vector
+a Periodontal niche (inflamed pocket with P. gingivalis rods and fimbriae, plus
+zoom inset) - b Virulence cargo (RgpA/RgpB/Kgp gingipains using shape + letter
+redundancy, OMVs with cargo dots) - c Systemic spread (bloodstream vessel with
+red cells, immune cells and disseminating cargo) - d BBB gate (endothelial
+tight-junction modules and astrocyte branches) - e Brain entry (brain silhouette
+with magnified target region) - f Neuronal mechanisms (neuron injury with
+amyloid-beta plaques and tau fragments; compact AChE-Aβ nucleation inset with
+PAS, Aβ peptide and residue 344-361 surface patch). A bottom evidence band
+shows transcriptomics/GEO, molecular docking and 1 microsecond MD simulation.
+
+**Editing** - zones are named groups `zone-a`...`zone-f` (plus the Figure 3
+methods band `zone-g`); every icon is plain paths/ellipses referencing one
+`<defs>` gradient block (recolor globally). The reproducible generator/exporter
+is `generate_top_journal_svgs.py`; journal exports include PDF/EPS-ready vector
+PDF and 300-dpi-class PNG.
+
+**Journal compliance** - all figures ship as editable SVG (master), vector
 PDF and 2340x1590 PNG (~300 dpi at double-column width). Captions use a bold
 "Figure 1 |" lead plus a one-line summary; alt text is embedded via SVG
 `<title>`/`<desc>`; minimum label size 8. A deuteranopia deltaE audit passes
@@ -51,4 +66,4 @@ are decorative - panel identity is carried by letter chips and titles.
 
 **Reproducibility** - the full methodology (layout system, glossy-icon rules,
 renderer-safe constraints, overflow + pixel-probe QA pipeline) is captured in
-`.claude/skills/biorender-svg-figure/` (SKILL.md + references/helpers.py).
+`.claude/skills/biorender-svg-figure/` (SKILL.md + references/helpers.py) and the reproducible exporter `figures/generate_top_journal_svgs.py`.

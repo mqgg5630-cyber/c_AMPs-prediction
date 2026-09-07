@@ -13,7 +13,9 @@ description: >-
 
 Tell the story with **illustrated icons**, never data charts or text cards.
 Precedents in this repo: `figures/amp_dl_review_fig1.svg` (deep learning for
-AMP prediction) and `figures/umami_ml_fig1.svg` (ML for umami peptides).
+AMP prediction), `figures/umami_ml_fig1.svg` (ML for umami peptides), and
+`figures/pg_ad_mechanism_fig1.svg` (P. gingivalis periodontal-to-Alzheimer
+mechanism).
 
 ## 1. Layout system
 
@@ -89,9 +91,9 @@ The PNG pipeline is `svglib → renderPDF → pymupdf Matrix(2,2)`. Its quirks:
   figure title 16.
 - **Colour-blind safety**: audit every *informational* colour pair with
   `cbt_audit` / `deltaE(..., "deuteranopia")` from helpers.py. Pass =
-  ΔE-deut ≥ 25 (or ≥ 15 with normal ΔE ≥ 25). Reference results from the two
-  precedent figures: bead blue/red 114, green/gray wells 44, green/amber
-  wells 61 — all pass. Decorative zone tints are exempt (panel identity is
+  ΔE-deut ≥ 25 (or ≥ 15 with normal ΔE ≥ 25). Reference results from precedent
+  figures: bead blue/red 114, green/gray wells 44, green/amber wells 61,
+  P. gingivalis mechanism pairs 92-121 — all pass. Decorative zone tints are exempt (panel identity is
   carried by letter chips + titles; WCAG 1.4.1 "never colour alone"), and any
   colour that encodes *state* gets a redundant non-colour cue (e.g. white
   centre dots on "weak" MIC wells).
@@ -126,5 +128,5 @@ columns in a membrane) · cell (nucleus + sparkles) · soup bowl · sauce bottle
 salt shaker · noodle cup · cutlery · plate · GPU chip · blood agar · microscope
 · syringe · bandage · checklist · factory · heart/leaf/star trio.
 
-Copy exact geometry from the two precedent SVGs (they are QA-green), rescale
+Copy exact geometry from the three precedent SVGs (they are QA-green), rescale
 by wrapping in `<g transform="translate scale">`.
