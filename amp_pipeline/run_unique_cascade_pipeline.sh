@@ -10,6 +10,11 @@ GROUPED="${1:?请输入分组 FASTA 目录}"
 RESULTS="${2:?请输入结果目录}"
 MODE="${3:-strict}"
 [[ "$MODE" =~ ^(strict|any|all|bench)$ ]] || { echo '模式必须是 strict、any、all 或 bench'; exit 2; }
+# Prediction scripts chdir into $PROJECT/script; make every work/output path
+# absolute so their output files are not accidentally created under script/.
+GROUPED="$(readlink -f "$GROUPED")"
+mkdir -p "$RESULTS"
+RESULTS="$(readlink -f "$RESULTS")"
 TF_ENV="${ENV_TF:-}"; BERT_ENV="${ENV_BERT:-}"
 find_env(){ local x="$1" n="$2"; if [[ -x "$x/bin/python" ]]; then echo "$x"; return; fi; for b in "$HOME/miniconda3" "$HOME/miniforge3" "$HOME/anaconda3"; do [[ -x "$b/envs/$n/bin/python" ]] && { echo "$b/envs/$n"; return; }; done; echo "$x"; }
 TF_ENV="$(find_env "${TF_ENV:-camps-tf114}" camps-tf114)"
