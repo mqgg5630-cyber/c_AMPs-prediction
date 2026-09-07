@@ -19,11 +19,16 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$SCRIPT_DIR/lib.sh"
 GROUPED_DIR="${1:-sorf_grouped_catalog}"
 RESULTS_ROOT="${2:-amp_results}"
 PROJECT_DIR="${3:-$(dirname "$SCRIPT_DIR")}"
-ENV_TF="${4:-/home/w26/miniconda3/envs/camps-tf114}"
-ENV_BERT="${5:-/home/w26/miniconda3/envs/py36}"
+# 环境自动探测: 位置参数 > ENV_TF/ENV_BERT 环境变量 > conda root 下的 camps-tf114 / camps-bert(或老的 py36)
+resolve_envs
+ENV_TF="${4:-${ENV_TF:-}}"
+ENV_BERT="${5:-${ENV_BERT:-}}"
+SKIP_BERT_ARG="${SKIP_BERT_ARG:-}"      # 传 skip-bert 可在缺 bert.bin 时只跑两个 TF 模型
 
 SKIP_TOTAL="${SKIP_TOTAL:-1}"    # 1 = 跳过 sORF_All_Total.fa; 0 = 也跑
 
@@ -73,7 +78,20 @@ echo "=================================================="
 echo " 分组目录 : $GROUPED_DIR"
 echo " 结果目录 : $RESULTS_ROOT"
 echo " 项目目录 : $PROJECT_DIR"
+echo " TF  环境 : ${ENV_TF:-<未找到>}"
+echo " BERT环境 : ${ENV_BERT:-<未找到>}"
 echo "=================================================="
+
+# 开跑前统一预检, 免得第 50 个分组才报错
+if [ ! -x "${ENV_TF:-}/bin/python" ]; then
+    echo " [错误] 找不到 TF 环境 (${ENV_TF:-<空>}), 先跑: bash amp_pipeline/install_envs.sh --only tf"
+    exit 1
+fi
+if [ "$SKIP_BERT_ARG" != "skip-bert" ] && [ ! -x "${ENV_BERT:-}/bin/python" ]; then
+    echo " [错误] 找不到 BERT 环境 (${ENV_BERT:-<空>}), 先跑: bash amp_pipeline/install_envs.sh --only bert"
+    echo "        或: SKIP_BERT_ARG=skip-bert bash amp_pipeline/run_pipeline_all_groups.sh ..."
+    exit 1
+fi
 
 count=0
 # find 每个 cohort 文件夹下的所有 *.fa
@@ -102,7 +120,7 @@ for dir in "$GROUPED_DIR"/*/; do
         echo ""
         echo "########## 处理 $fa ##########"
         bash "$SCRIPT_DIR/run_pipeline_one.sh" \
-            "$fa" "$out" "$PROJECT_DIR" "$ENV_TF" "$ENV_BERT" || {
+            "$fa" "$out" "$PROJECT_DIR" "$ENV_TF" "$ENV_BERT" $SKIP_BERT_ARG || {
             echo "  [警告] 该分组处理失败或为空, 已跳过: $fa (bash 退出码 $?)"
         }
         # 若分组为空, run_pipeline_one.sh 会 exit 0 且不产生最终结果, 该目录会被 aggregator 跳过

@@ -21,6 +21,7 @@ from bert_sklearn.finetune import fit
 from bert_sklearn.finetune import eval_model
 from bert_sklearn.model import BertPlusMLP
 from bert_sklearn.config import FinetuneConfig
+from bert_sklearn.utils import torch_load_compat
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -430,7 +431,8 @@ class BaseBertEstimator(BaseEstimator):
         """
 
         print("Loading model from %s..."%(restore_file))
-        state = torch.load(restore_file)
+        # weights_only=False 兼容 torch>=2.6 (见 utils.torch_load_compat)
+        state = torch_load_compat(restore_file)
 
         params = state['params']
 
@@ -659,7 +661,8 @@ def load_model(filename):
     """
     Load BertClassifier or BertRegressor from a disk file.
     """
-    state = torch.load(filename)
+    # weights_only=False 兼容 torch>=2.6 (见 utils.torch_load_compat)
+    state = torch_load_compat(filename)
     class_name = state['class_name']
 
     classes = {

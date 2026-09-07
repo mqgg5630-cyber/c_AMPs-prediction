@@ -7,6 +7,25 @@ import torch
 from .model.pytorch_pretrained import BertAdam, WarmupLinearSchedule
 
 
+def torch_load_compat(filename, map_location=None, **kwargs):
+    """torch.load 的跨版本兼容封装。
+
+    PyTorch 2.6 起 ``torch.load`` 的默认值从 ``weights_only=False`` 变成了
+    ``weights_only=True``, 而 bert.bin 里除了权重还 pickle 了 sklearn 的配置对象
+    (label2id / input_text_pairs / params 字典等), 用 weights_only=True 反序列化会直接抛
+    ``UnpicklingError``。这里统一显式传 ``weights_only=False``; 老版本 torch 不认这个
+    关键字, 就自动退回普通调用。
+    """
+    kwargs.pop("weights_only", None)
+    if map_location is not None:
+        kwargs["map_location"] = map_location
+    try:
+        return torch.load(filename, weights_only=False, **kwargs)
+    except TypeError:
+        # torch < 1.13 没有 weights_only 参数
+        return torch.load(filename, **kwargs)
+
+
 def set_random_seed(seed=42, use_cuda=True):
     """Seed all random number generators to enable repeatable runs"""
     random.seed(seed)

@@ -1,0 +1,46 @@
+# =============================================================================
+# requirements_tf114.txt —— conda 环境 camps-tf114 (python 3.6) 的 pip 依赖
+#
+# 服务对象: script/prediction_attention.py (att.h5) + script/prediction_lstm.py (lstm.h5)
+#           即官方 requirement.txt 里的 "For Attention Prediction" 那一组。
+#
+# 关键说明:
+#   * tensorflow 1.14 只有 cp36 / cp37 的 wheel, 所以 python 必须 3.6 (或 3.7)。
+#   * 默认装 **CPU 版** tensorflow。原因: RTX A4000 是 Ampere (sm_86),
+#     CUDA 10.0 的 cubin 只到 sm_75, TF1.14 的 GPU kernel 在 Ampere 上极大概率报
+#     "no kernel image is available for execution on the device"。
+#     而 Attention/LSTM 都是 <50AA 肽段的小模型, CPU 上跑百万级肽段也很快。
+#   * 想赌一把 GPU: TF_FLAVOR=gpu bash amp_pipeline/install_envs.sh
+#     (会改装 tensorflow-gpu==1.14.0 并额外装 cudatoolkit=10.0 + cudnn=7.6)
+#   * 每一个版本号都是 "python3.6 + manylinux + PyPI 上确实存在 wheel" 的组合,
+#     所以整条安装 **不需要编译 C 扩展, 不需要 gcc**。
+# =============================================================================
+
+# ---- 先把打包工具顶到 py3.6 能用的最后一版 (由 install_envs.sh 分两步 bootstrap) ----
+setuptools==59.6.0
+wheel==0.37.1
+
+# ---- 深度学习内核 ----
+tensorflow==1.14.0
+Keras==2.2.4
+
+# ---- tensorflow 1.14 的运行时依赖 (显式钉住, 防止 pip 解析到 py3.6 装不上的新版) ----
+numpy==1.19.5
+protobuf==3.19.6
+grpcio==1.48.2
+wrapt==1.14.1
+gast==0.2.2
+astor==0.8.1
+google-pasta==0.2.0
+absl-py==1.4.0
+termcolor==1.1.0
+six==1.16.0
+Keras-Applications==1.0.8
+Keras-Preprocessing==1.1.2
+h5py==2.10.0
+PyYAML==5.4.1
+
+# ---- 官方 requirement.txt 里另外点名的 (预测脚本本身用不到, 装上省事) ----
+pandas==1.1.5
+scipy==1.5.3
+scikit-learn==0.22.2.post1

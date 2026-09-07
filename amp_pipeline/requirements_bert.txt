@@ -1,0 +1,33 @@
+# =============================================================================
+# requirements_bert.txt —— conda 环境 camps-bert / py36 (python 3.9) 的 pip 依赖
+#
+# 服务对象: script/prediction_bert.py (Models/bert.bin) + 仓库自带的 bert_sklearn 0.2.0
+#
+# 关键说明:
+#   * torch **单独一步** 装 (见 install_envs.sh), 因为 GPU / CPU 用的 index-url 不同:
+#       GPU : pip install torch==2.4.1            (PyPI 默认 wheel 就是 cu12.1 版, sm_86 可用)
+#       CPU : pip install torch==2.4.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+#     所以本文件里 **不写 torch**, 避免把已装好的 GPU 版覆盖掉。
+#   * 钉 torch<2.6 是因为 2.6 起 torch.load 默认 weights_only=True, 会拒绝反序列化
+#     bert.bin 里的 sklearn 配置对象。仓库里 bert_sklearn/utils.py 已经加了
+#     torch_load_compat() 兼容层, 双保险。
+#   * bert_sklearn 用 `pip install --no-deps <repo_root>` 装 (依赖全在本文件里钉死),
+#     否则它会把 torch / scikit-learn 拉到最新版。
+#   * RTX A4000 = Ampere sm_86, cu121 完整支持 → BERT 这一路是真能吃到 GPU 的,
+#     也是三个模型里唯一值得用 GPU 的 (最慢的那个)。
+# =============================================================================
+
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.3
+scikit-learn==1.3.2
+
+# bert_sklearn/setup.py 声明的依赖 (除 torch)
+pytorch_pretrained_bert==0.6.1
+boto3==1.28.88
+requests==2.31.0
+regex==2023.10.3
+tqdm==4.66.1
+
+# 下载 vocab.txt / bert.bin 时会用到
+huggingface_hub==0.20.3

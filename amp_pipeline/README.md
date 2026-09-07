@@ -134,6 +134,32 @@ tar -czf sorf_grouped_catalog.tar.gz -C /mnt/hpc/.../sorf_pipeline sorf_grouped_
 
 ---
 
+## 2.5 一键安装环境 + 三模型自检（新机器看这里）
+
+仓库根目录的 **[INSTALL.md](../INSTALL.md)** 是完整安装指南。最短路径：
+
+```bash
+cd ~/c_AMPs-prediction
+bash amp_pipeline/install_envs.sh 2>&1 | tee install.log     # mamba 建两个环境 (幂等)
+bash amp_pipeline/smoke_test_3models.sh 2>&1 | tee smoke.log # 三个模型逐个 PASS/FAIL + 端到端
+```
+
+要点：
+
+| 环境 | python | 用途 |
+| :--- | :--- | :--- |
+| `camps-tf114` | 3.6 | Attention `att.h5` + LSTM `lstm.h5`（TF1.14 只有 cp36/cp37 wheel） |
+| `camps-bert`  | 3.9 | BERT `bert.bin`（torch 2.4.1 + 仓库自带 bert_sklearn 0.2.0） |
+
+- **环境路径不再硬编码**：`lib.sh` 会按 `ENV_TF/ENV_BERT` 环境变量 → `conda info --base` → `~/miniconda3|mambaforge|anaconda3` 顺序自动探测，换机器不用改脚本（老版本写死的 `/home/w26/...` 已废弃）。
+- **GPU 策略**：TF1.14(CUDA10) 在 Ampere(sm_86) 上会报 `no kernel image is available`，所以 `TF_USE_GPU=auto` 默认探测失败即落 CPU；BERT 用 torch cu12.1，`BERT_USE_CUDA=auto` 正常吃 GPU。
+- **缺 `bert.bin` 也能先验流程**：`SMOKE_SKIP_BERT=1 bash amp_pipeline/smoke_test_3models.sh`，端到端段会写占位 BERT 概率把 `format.pl → 两模型 → result.pl → 汇总` 跑通。
+- 装完 `source amp_pipeline/env.sh` 即可拿到 `ENV_TF` / `ENV_BERT` 与全部运行期默认参数。
+
+> 下面第 3 节里提到的 `camps-tf114` / `py36` 环境名，现在默认叫 `camps-tf114` / `camps-bert`（老名字 `py36` 仍会被自动识别）。
+
+---
+
 ## 3. 本地：三模型 AMP 预测
 
 你本地的 Python 环境是官方要求的三个环境：

@@ -126,3 +126,10 @@ attention_proba.tsv
 lstm_proba.tsv
 bert_proba.tsv
 input_formatted_300.txt
+
+# 安装/自检脚本产生的环境与日志 (env.sh 会被 install_envs.sh 追加生成内容, 属机器本地状态)
+amp_pipeline/env_local.sh
+install.log
+smoke.log
+*.tsv.tmp
+Models/bert-base-uncased/

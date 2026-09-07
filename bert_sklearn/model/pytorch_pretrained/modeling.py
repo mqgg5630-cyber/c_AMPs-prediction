@@ -752,7 +752,12 @@ class BertPreTrainedModel(nn.Module):
             #print("Loading Pytorch checkpoint from ", weights_path.split("/")[-1])
             print("Loading Pytorch checkpoint")                            
             #state_dict = torch.load(resolved_archive_file, map_location='cpu')
-            state_dict = torch.load(weights_path, map_location='cpu' if not torch.cuda.is_available() else None)
+            try:
+                from bert_sklearn.utils import torch_load_compat as _tlc
+            except Exception:  # pragma: no cover - 独立使用本模块时的兜底
+                _tlc = lambda f, **kw: torch.load(f, **kw)
+            # 一律先加载到 CPU, 之后由调用方 .to(device); 顺带兼容 torch>=2.6 的 weights_only
+            state_dict = _tlc(weights_path, map_location='cpu')
             if tempdir:
                 # Clean up temp dir
                 shutil.rmtree(tempdir)    

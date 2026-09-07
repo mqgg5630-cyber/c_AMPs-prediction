@@ -7,23 +7,36 @@
 #   - py36        : BERT 模型 (bert.bin)                            [PyTorch1.10/bert-sklearn]
 #
 # 用法:
-#   bash run_pipeline_one.sh <input.fa> <output_dir> [project_dir] [env_tf] [env_bert]
+#   bash run_pipeline_one.sh <input.fa> <output_dir> [project_dir] [env_tf] [env_bert] [skip-bert]
 # 示例:
 #   bash run_pipeline_one.sh sorf_grouped_catalog/Cohort1_Matched265_5Stage/Cohort1_NC.fa \
 #        out_Cohort1_NC
 #
 # 说明: 本脚本会自动推断项目根目录 (即 script/ 的上一级)。
 #       若你的 Models/ 下没有 bert.bin, 请按 Models/ReadME.txt 下载并校验 md5。
+#       环境路径 **不再硬编码**: 不传 env_tf/env_bert 时, 由 lib.sh 按
+#       ENV_TF / ENV_BERT 环境变量 → conda root → ~/miniconda3 等顺序自动探测
+#       (环境名默认 camps-tf114 / camps-bert, 兼容老名字 py36)。
+#       第 6 个参数传 skip-bert 可在缺 bert.bin 时只跑 Attention+LSTM
+#       (BERT 概率写占位 0.00000000, 仅用于验证流程, 最终 is_AMP 必为 0)。
 # ==============================================================================
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "$SCRIPT_DIR/lib.sh"
 
-INPUT_FA="$1"
-OUTPUT_DIR="$2"
+INPUT_FA="${1:-}"
+OUTPUT_DIR="${2:-}"
 PROJECT_DIR="${3:-$(dirname "$SCRIPT_DIR")}"                 # script/ 上一级
-ENV_TF="${4:-/home/w26/miniconda3/envs/camps-tf114}"
-ENV_BERT="${5:-/home/w26/miniconda3/envs/py36}"
+
+# ---- 环境自动探测 (第 4/5 个位置参数仍可显式覆盖, 保持向后兼容) ----
+resolve_envs
+ENV_TF="${4:-${ENV_TF:-}}"
+ENV_BERT="${5:-${ENV_BERT:-}}"
+SKIP_BERT=0
+[ "${6:-}" = "skip-bert" ] && SKIP_BERT=1
+[ "${SKIP_BERT:-0}" = "1" ] && SKIP_BERT=1
 
 # BERT 运行时环境: 默认 auto 探测 GPU (有 CUDA 自动开启), 支持大批次加速 (适配 4GB 显存显卡)
 export BERT_NUM_WORKERS="${BERT_NUM_WORKERS:-0}"
@@ -54,22 +67,34 @@ if [ ! -f "$RESULT_PL" ]; then
     exit 1
 fi
 # 2) 三个模型文件
-for m in att.h5 lstm.h5 bert.bin; do
+for m in att.h5 lstm.h5; do
     if [ ! -f "$PROJECT_DIR/Models/$m" ]; then
         echo "  [错误] 缺模型文件: Models/$m"
-        echo "         请按 Models/ReadME.txt 放置 (bert.bin 需单独下载)。"
+        echo "         请按 Models/ReadME.txt 放置。"
         exit 1
     fi
 done
+if [ ! -f "$PROJECT_DIR/Models/bert.bin" ]; then
+    if [ "$SKIP_BERT" = "1" ]; then
+        echo "  [警告] 缺 Models/bert.bin, 但收到 skip-bert → BERT 用占位概率, 只跑 Attention+LSTM"
+    else
+        echo "  [错误] 缺模型文件: Models/bert.bin"
+        echo "         请按 Models/ReadME.txt 从 Dropbox 下载 (md5 990d14de053d8080fcca33d712d647b6),"
+        echo "         或在第 6 个参数传 skip-bert 先只跑两个 TF 模型。"
+        exit 1
+    fi
+fi
 # 3) 两个 conda 环境
 if [ ! -x "$ENV_TF/bin/python" ]; then
-    echo "  [错误] 找不到 TF 环境 python: $ENV_TF/bin/python"
-    echo "         请传第 4 个参数, 或 conda env list 确认环境名。"
+    echo "  [错误] 找不到 TF 环境 python: ${ENV_TF:-<空>}"
+    echo "         请传第 4 个参数, 或 export ENV_TF=<prefix>, 或先跑 install_envs.sh --only tf"
+    echo "         (当前 conda root: $CONDA_ROOT, 已探测的环境名: $ENV_TF_NAME)"
     exit 1
 fi
-if [ ! -x "$ENV_BERT/bin/python" ]; then
-    echo "  [错误] 找不到 BERT 环境 python: $ENV_BERT/bin/python"
-    echo "         请传第 5 个参数, 或 conda env list 确认环境名。"
+if [ "$SKIP_BERT" != "1" ] && [ ! -x "$ENV_BERT/bin/python" ]; then
+    echo "  [错误] 找不到 BERT 环境 python: ${ENV_BERT:-<空>}"
+    echo "         请传第 5 个参数, 或 export ENV_BERT=<prefix>, 或先跑 install_envs.sh --only bert"
+    echo "         (当前 conda root: $CONDA_ROOT, 已探测的环境名: $ENV_BERT_NAME / py36)"
     exit 1
 fi
 # 4) 输入文件
@@ -121,6 +146,8 @@ echo "=================================================="
 echo "[2/5] Attention 模型预测 (camps-tf114) ..."
 echo "=================================================="
 cd "$PROJECT_DIR/script"
+# TF1.14 在 Ampere(sm_86) 上 CUDA10 kernel 常常不兼容; auto 模式会实测一次, 不行就落 CPU
+apply_tf_device_policy
 RUN_ATT=1
 if [ -f "$OUTPUT_ABS/attention_proba.tsv" ] && [ -s "$OUTPUT_ABS/attention_proba.tsv" ]; then
     ATT_CT=$(wc -l < "$OUTPUT_ABS/attention_proba.tsv")
@@ -132,6 +159,8 @@ if [ -f "$OUTPUT_ABS/attention_proba.tsv" ] && [ -s "$OUTPUT_ABS/attention_proba
     fi
 fi
 if [ "$RUN_ATT" -eq 1 ]; then
+    # PYTHONPATH=script/ : prediction_attention.py 里 `from Attention import Attention_layer`
+    PYTHONPATH="$PROJECT_DIR/script${PYTHONPATH:+:$PYTHONPATH}" \
     "$ENV_TF/bin/python" prediction_attention.py \
         "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/attention_proba.tsv"
     echo "Attention 完成 -> $OUTPUT_ABS/attention_proba.tsv ($(wc -l < "$OUTPUT_ABS/attention_proba.tsv") 条)"
@@ -151,6 +180,7 @@ if [ -f "$OUTPUT_ABS/lstm_proba.tsv" ] && [ -s "$OUTPUT_ABS/lstm_proba.tsv" ]; t
     fi
 fi
 if [ "$RUN_LSTM" -eq 1 ]; then
+    PYTHONPATH="$PROJECT_DIR/script${PYTHONPATH:+:$PYTHONPATH}" \
     "$ENV_TF/bin/python" prediction_lstm.py \
         "$OUTPUT_ABS/input_formatted_300.txt" "$OUTPUT_ABS/lstm_proba.tsv"
     echo "LSTM 完成 -> $OUTPUT_ABS/lstm_proba.tsv ($(wc -l < "$OUTPUT_ABS/lstm_proba.tsv") 条)"
@@ -169,7 +199,13 @@ if [ -f "$OUTPUT_ABS/bert_proba.tsv" ] && [ -s "$OUTPUT_ABS/bert_proba.tsv" ]; t
         echo "  [断点续跑] BERT 结果不完整 (当前 $BERT_CT / 期望 $SEQ_COUNT 行), 重新完整预测"
     fi
 fi
-if [ "$RUN_BERT" -eq 1 ]; then
+if [ "$SKIP_BERT" = "1" ] && [ ! -f "$PROJECT_DIR/Models/bert.bin" ]; then
+    echo "  [skip-bert] bert.bin 缺失 → 写占位概率 0.00000000 (仅验证流程, 三票永远凑不齐)"
+    awk 'BEGIN{n=0} /^>/{n++} END{for(i=0;i<n;i++) printf "0.00000000\n"}' \
+        "$INPUT_ABS" > "$OUTPUT_ABS/bert_proba.tsv"
+    echo "  [skip-bert] 占位 bert_proba.tsv ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条)"
+elif [ "$RUN_BERT" -eq 1 ]; then
+    PYTHONPATH="$PROJECT_DIR/script${PYTHONPATH:+:$PYTHONPATH}" \
     "$ENV_BERT/bin/python" prediction_bert.py \
         "$INPUT_ABS" "$OUTPUT_ABS/bert_proba.tsv"
     echo "BERT 完成 -> $OUTPUT_ABS/bert_proba.tsv ($(wc -l < "$OUTPUT_ABS/bert_proba.tsv") 条)"
