@@ -29,10 +29,11 @@
 #   BERT_EVAL_BATCH_SIZE=256  BERT_MAX_SEQ_LENGTH=66  BERT_FP16=1
 #   TF_PREDICT_BATCH_SIZE=1024 TF_CHUNK_SIZE=50000
 #   BENCH_N=200000   SKIP_TOTAL=1 (跳过 sORF_All_Total.fa)   SORT_MEM=40% (sort 可用内存)
-#   BERT_CASCADE=1   级联模式 (默认开): BERT 只跑 "Attention 或 LSTM 至少一个 >0.5" 的序列。
-#                    最终 is_AMP(3票) / is_AMP_flex(>=2票) 与全量跑 BERT 完全一致, 只是两票皆否的
-#                    序列 bert_prob 记为 NA。GTX 1650 上 BERT 仅 ~80 条/s, 级联可把 BERT 工作量砍掉 90%+。
-#                    BERT_CASCADE=0 则全量跑 BERT。
+#   BERT_CASCADE     级联模式, 决定哪些序列需要跑 BERT (GTX 1650 上 BERT 仅 ~80 条/s, 是唯一瓶颈):
+#     strict (默认)  只跑 "Attention >0.5 且 LSTM >0.5" 的序列。三票 is_AMP 与全量跑 BERT 完全一致;
+#                    但 is_AMP_flex(>=2票) 对未跑 BERT 的序列不再可信 (汇总表会标注)。BERT 量最少 (~1%)。
+#     any            只跑 "Attention 或 LSTM 至少一个 >0.5" 的序列。is_AMP 与 is_AMP_flex 都与全量一致。
+#     0              全量跑 BERT (每条都有 bert_prob)。
 # ==============================================================================
 set -e
 set -o pipefail
@@ -46,7 +47,8 @@ MODE="${3:-full}"
 STEP="${STEP:-all}"
 SKIP_TOTAL="${SKIP_TOTAL:-1}"
 BENCH_N="${BENCH_N:-200000}"
-BERT_CASCADE="${BERT_CASCADE:-1}"
+BERT_CASCADE="${BERT_CASCADE:-strict}"
+case "$BERT_CASCADE" in 1|any) BERT_CASCADE=any;; strict|3|and) BERT_CASCADE=strict;; 0|no|off) BERT_CASCADE=0;; *) echo "[错误] BERT_CASCADE 取值 strict|any|0"; exit 1;; esac
 SORT_MEM="${SORT_MEM:-40%}"
 
 CONDA_BASE="$(conda info --base 2>/dev/null || true)"
@@ -99,7 +101,11 @@ echo " 输出目录 : $OUT_DIR"
 echo " 模式     : $MODE   STEP=$STEP"
 echo " BERT     : batch=$BERT_EVAL_BATCH_SIZE max_len=$BERT_MAX_SEQ_LENGTH fp16=$BERT_FP16"
 echo " Keras    : batch=$TF_PREDICT_BATCH_SIZE chunk=$TF_CHUNK_SIZE"
-echo " 级联     : BERT_CASCADE=$BERT_CASCADE $([ "$BERT_CASCADE" = 1 ] && echo '(BERT 只跑 att/lstm 至少一票的序列)')"
+case "$BERT_CASCADE" in
+  strict) echo " 级联     : strict —— BERT 只跑 att>0.5 且 lstm>0.5 的序列 (只保证三票 is_AMP 精确)";;
+  any)    echo " 级联     : any —— BERT 只跑 att 或 lstm 至少一票的序列 (三票/两票均精确)";;
+  0)      echo " 级联     : 关闭 —— BERT 全量";;
+esac
 echo "=================================================="
 
 UNIQ="$WORK/unique_seqs.txt"
@@ -160,10 +166,15 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
         LOG "[3/5] BERT 结果已完整 ($N_UNIQ 条), 跳过"
     else
         [ "$(count_lines "$KERAS_OUT")" -ge "$N_UNIQ" ] || { echo "[错误] 需先完成 Keras 步骤"; exit 1; }
-        if [ "$BERT_CASCADE" = "1" ]; then
-            if [ ! -f "$BERT_NEED.done" ]; then
-                paste "$UNIQ" "$KERAS_OUT" | awk -F'\t' '$2!="NA" && ($2>0.5 || $3>0.5){print $1}' > "$BERT_NEED"
-                touch "$BERT_NEED.done"
+        if [ "$BERT_CASCADE" != "0" ]; then
+            if [ ! -f "$BERT_NEED.done" ] || [ "$(cat "$BERT_NEED.mode" 2>/dev/null)" != "$BERT_CASCADE" ]; then
+                if [ "$BERT_CASCADE" = "strict" ]; then
+                    paste "$UNIQ" "$KERAS_OUT" | awk -F'\t' '$2!="NA" && $2>0.5 && $3>0.5{print $1}' > "$BERT_NEED"
+                else
+                    paste "$UNIQ" "$KERAS_OUT" | awk -F'\t' '$2!="NA" && ($2>0.5 || $3>0.5){print $1}' > "$BERT_NEED"
+                fi
+                echo "$BERT_CASCADE" > "$BERT_NEED.mode"; touch "$BERT_NEED.done"
+                rm -f "$BERT_NEED_OUT" "$BERT_OUT" "$BERT_OUT.done"   # 模式变了, 旧输出作废
             fi
             BERT_INPUT="$BERT_NEED"
         else
@@ -185,7 +196,7 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
         [ -n "${GPU_PID:-}" ] && kill "$GPU_PID" 2>/dev/null || true
         BERT_SEC=$(( $(date +%s) - t0 ))
         # 对齐回全部唯一序列: 未跑 BERT 的记 NA (UNIQ 与 BERT_INPUT 均为 C 序排序)
-        if [ "$BERT_CASCADE" = "1" ]; then
+        if [ "$BERT_CASCADE" != "0" ]; then
             paste "$BERT_INPUT" "$BERT_NEED_OUT" > "$WORK/.need_p"
             join -t $'\t' -a1 -e NA -o 2.2 "$UNIQ" "$WORK/.need_p" > "$BERT_OUT"
             rm -f "$WORK/.need_p"
@@ -217,7 +228,12 @@ if [ "$MODE" = "bench" ]; then
     awk '{if(length($0)>64)c++} END{printf "    >64 AA 的序列占 %.2f%% (BERT_MAX_SEQ_LENGTH=66 时这些会被截断到 64 AA)\n", NR?100*c/NR:0}' "$UNIQ"
     echo ""
     NEED_PCT=$(awk -v a="$N_BERT" -v b="$N_UNIQ" 'BEGIN{printf "%.2f", (b?100*a/b:0)}')
-    echo "  级联比例: att/lstm 至少一票 >0.5 的序列占唯一序列的 ${NEED_PCT}%  (= 需要 BERT 的比例)"
+    N_AND=$(paste "$UNIQ" "$KERAS_OUT" | awk -F'\t' '$2!="NA" && $2>0.5 && $3>0.5' | wc -l)
+    N_OR=$(paste "$UNIQ" "$KERAS_OUT"  | awk -F'\t' '$2!="NA" && ($2>0.5 || $3>0.5)' | wc -l)
+    echo "  Keras 初筛 (唯一序列 $N_UNIQ 条):"
+    echo "    att>0.5 且 lstm>0.5 (strict, 三票候选) : $N_AND 条  ($(awk -v a=$N_AND -v b=$N_UNIQ 'BEGIN{printf "%.2f",b?100*a/b:0}')%)"
+    echo "    att>0.5 或 lstm>0.5 (any)              : $N_OR 条  ($(awk -v a=$N_OR -v b=$N_UNIQ 'BEGIN{printf "%.2f",b?100*a/b:0}')%)"
+    echo "  本次级联模式 $BERT_CASCADE, BERT 实际跑 ${NEED_PCT}%"
     echo ""
     echo "  估算全量:"
     TOTAL_RECS=$(cat "${GROUP_FAS[@]}" | grep -c '^>' || echo 0)
@@ -230,7 +246,7 @@ if [ "$MODE" = "bench" ]; then
             hk=$(awk -v n="$n" -v r="$rate_k" 'BEGIN{printf "%.1f", n/(r>0?r:1)/3600}')
             hb=$(awk -v n="$nb" -v r="$rate_b" 'BEGIN{printf "%.1f", n/(r>0?r:1)/3600}')
             hb_full=$(awk -v n="$n" -v r="$rate_b" 'BEGIN{printf "%.0f", n/(r>0?r:1)/3600}')
-            echo "    若唯一序列占 ${frac}% (= $n 条): Keras ≈ $hk h;  BERT 级联(${nb} 条) ≈ $hb h;  [BERT 全量 ≈ $hb_full h]"
+            echo "    若唯一序列占 ${frac}% (= $n 条): Keras ≈ $hk h;  BERT($BERT_CASCADE, ${nb} 条) ≈ $hb h;  [BERT 全量 ≈ $hb_full h]"
         done
     fi
     echo ""
@@ -279,6 +295,11 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "join" ] || [ "$STEP" = "summary" ]; then
     LOG "[5/5] 生成汇总表 ..."
     SUMMARY="$RES/amp_summary.tsv"; ALL="$RES/amp_all_peptides.tsv"
     printf 'cohort\tgroup\tn_seq\tn_AMP3\tAMP3_pct\tn_AMP_flex2\tAMP_flex2_pct\n' > "$SUMMARY"
+    MODE_USED="$(cat "$BERT_NEED.mode" 2>/dev/null || echo 0)"
+    if [ "$MODE_USED" = "strict" ]; then
+        echo "  [注意] 级联模式 strict: n_AMP3/is_AMP 精确; n_AMP_flex2/is_AMP_flex 为下界 (未跑 BERT 的序列按 0 票计)"
+        echo "级联模式 strict: 仅三票 is_AMP 精确; is_AMP_flex 为下界。" > "$RES/README_cascade.txt"
+    fi
     printf 'cohort\tgroup\tname\tseq\tlen\tatt_prob\tlstm_prob\tbert_prob\tn_votes\tis_AMP\tis_AMP_flex\n' > "$ALL"
     for fa in "${GROUP_FAS[@]}"; do
         cohort="$(basename "$(dirname "$fa")")"; grp="$(basename "$fa" .fa)"
