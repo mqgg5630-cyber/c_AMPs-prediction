@@ -430,7 +430,10 @@ class BaseBertEstimator(BaseEstimator):
         """
 
         print("Loading model from %s..."%(restore_file))
-        state = torch.load(restore_file)
+        # Models trained on GPU are commonly serialized with CUDA tensors.
+        # Allow the same checkpoint to be loaded by the CPU-only fallback.
+        map_location = None if torch.cuda.is_available() else torch.device('cpu')
+        state = torch.load(restore_file, map_location=map_location)
 
         params = state['params']
 
@@ -467,6 +470,13 @@ class BaseBertEstimator(BaseEstimator):
                                                  num_mlp_layers=num_mlp_layers,
                                                  num_mlp_hiddens=num_mlp_hiddens)
         params = state['params']
+        # ``restore_finetuned_model`` runs before BaseBertEstimator.__init__
+        # has initialized the sklearn hyperparameter attributes.  sklearn's
+        # set_params() calls get_params() first, so initialize all saved
+        # attributes before delegating to set_params().  This is especially
+        # important when loading old checkpoints on CPU-only PyTorch.
+        for key, value in params.items():
+            setattr(self, key, value)
         self.set_params(**params)
         self.input_text_pairs = state['input_text_pairs']
         self.id2label = state['id2label']
@@ -659,7 +669,10 @@ def load_model(filename):
     """
     Load BertClassifier or BertRegressor from a disk file.
     """
-    state = torch.load(filename)
+    # Models trained on GPU are commonly serialized with CUDA tensors.
+    # Allow the same checkpoint to be loaded by the CPU-only fallback.
+    map_location = None if torch.cuda.is_available() else torch.device('cpu')
+    state = torch.load(filename, map_location=map_location)
     class_name = state['class_name']
 
     classes = {
