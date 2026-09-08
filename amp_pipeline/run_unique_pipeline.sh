@@ -34,6 +34,8 @@
 #                    但 is_AMP_flex(>=2票) 对未跑 BERT 的序列不再可信 (汇总表会标注)。BERT 量最少 (~1%)。
 #     any            只跑 "Attention 或 LSTM 至少一个 >0.5" 的序列。is_AMP 与 is_AMP_flex 都与全量一致。
 #     0              全量跑 BERT (每条都有 bert_prob)。
+#     skip           完全不跑 BERT: 只用 Attention + LSTM 两票判定 (is_AMP2 = 两者都 >0.5), bert_prob 全为 NA。
+#                    适合先快速拿到全部四个队列的结果, 之后可用 STEP=bert BERT_CASCADE=strict 补跑 BERT。
 # ==============================================================================
 set -e
 set -o pipefail
@@ -48,7 +50,7 @@ STEP="${STEP:-all}"
 SKIP_TOTAL="${SKIP_TOTAL:-1}"
 BENCH_N="${BENCH_N:-200000}"
 BERT_CASCADE="${BERT_CASCADE:-strict}"
-case "$BERT_CASCADE" in 1|any) BERT_CASCADE=any;; strict|3|and) BERT_CASCADE=strict;; 0|no|off) BERT_CASCADE=0;; *) echo "[错误] BERT_CASCADE 取值 strict|any|0"; exit 1;; esac
+case "$BERT_CASCADE" in 1|any) BERT_CASCADE=any;; strict|3|and) BERT_CASCADE=strict;; 0|no|off) BERT_CASCADE=0;; skip|none|keras) BERT_CASCADE=skip;; *) echo "[错误] BERT_CASCADE 取值 strict|any|0|skip"; exit 1;; esac
 SORT_MEM="${SORT_MEM:-40%}"
 
 CONDA_BASE="$(conda info --base 2>/dev/null || true)"
@@ -105,6 +107,7 @@ case "$BERT_CASCADE" in
   strict) echo " 级联     : strict —— BERT 只跑 att>0.5 且 lstm>0.5 的序列 (只保证三票 is_AMP 精确)";;
   any)    echo " 级联     : any —— BERT 只跑 att 或 lstm 至少一票的序列 (三票/两票均精确)";;
   0)      echo " 级联     : 关闭 —— BERT 全量";;
+  skip)   echo " 级联     : skip —— 不跑 BERT, 只用 Attention+LSTM 两票判定 (is_AMP2)";;
 esac
 echo "=================================================="
 
@@ -161,11 +164,19 @@ fi
 BERT_NEED="$WORK/bert_needed.txt"
 BERT_NEED_OUT="$WORK/bert_needed_proba.tsv"
 GPU_LOG="$WORK/gpu_util.log"
-if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
+if [ "$BERT_CASCADE" = "skip" ] && { [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; }; then
+    if [ -f "$BERT_OUT.done" ] && [ "$(cat "$BERT_NEED.mode" 2>/dev/null)" != "skip" ]; then
+        LOG "[3/5] 已有真实 BERT 结果 ($(cat "$BERT_NEED.mode")), 保留不覆盖"
+    else
+        LOG "[3/5] BERT 跳过 (BERT_CASCADE=skip), bert_prob 全部记 NA"
+        awk '{print "NA"}' "$UNIQ" > "$BERT_OUT"; echo skip > "$BERT_NEED.mode"; touch "$BERT_OUT.done"
+        rm -f "$MERGED.done" "$RES"/*/*/aggregated_results.tsv.done 2>/dev/null
+    fi
+elif [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
     # 级联模式与上次不同 -> 旧的 BERT 输出作废
     if [ -f "$BERT_NEED.mode" ] && [ "$(cat "$BERT_NEED.mode")" != "$BERT_CASCADE" ]; then
         LOG "      级联模式由 $(cat "$BERT_NEED.mode") 改为 $BERT_CASCADE, 重新生成 BERT 输入"
-        rm -f "$BERT_NEED" "$BERT_NEED.done" "$BERT_NEED.mode" "$BERT_NEED_OUT" "$BERT_OUT" "$BERT_OUT.done"
+        rm -f "$BERT_NEED" "$BERT_NEED.done" "$BERT_NEED.mode" "$BERT_NEED_OUT" "$BERT_OUT" "$BERT_OUT.done" "$MERGED.done"
     fi
     if [ "$(count_lines "$BERT_OUT")" -ge "$N_UNIQ" ] && [ "$N_UNIQ" -gt 0 ] && [ -f "$BERT_OUT.done" ]; then
         LOG "[3/5] BERT 结果已完整 ($N_UNIQ 条), 跳过"
@@ -210,6 +221,7 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "bert" ]; then
         fi
         [ "$(count_lines "$BERT_OUT")" -eq "$N_UNIQ" ] || { echo "[错误] BERT 对齐后行数 $(count_lines "$BERT_OUT") != $N_UNIQ"; exit 1; }
         touch "$BERT_OUT.done"
+        rm -f "$MERGED.done" "$RES"/*/*/aggregated_results.tsv.done 2>/dev/null   # BERT 变了, 回填需重做
         LOG "      BERT 用时 $BERT_SEC s"
         [ -s "$GPU_LOG" ] && LOG "      GPU 利用率采样 (util, mem, power, sm_clock) 最近 5 条:" && tail -5 "$GPU_LOG" | sed 's/^/        /'
     fi
@@ -282,9 +294,9 @@ if [ "$STEP" = "all" ] || [ "$STEP" = "join" ]; then
         # 输出列: idx name SEQ att lstm bert
         join -t $'\t' -1 3 -2 1 -o 1.1,1.2,0,2.2,2.3,2.4 "$gdir/.recs_by_seq" "$MERGED" \
             | sort -t $'\t' -k1,1n -S "$SORT_MEM" -T "$TMPDIR" \
-            | awk 'BEGIN{OFS="\t"; print "name","seq","len","att_prob","lstm_prob","bert_prob","n_votes","is_AMP","AMP_pred","is_AMP_flex"}
-                   { v=0; if($4!="NA"&&$4>0.5)v++; if($5!="NA"&&$5>0.5)v++; if($6!="NA"&&$6>0.5)v++;
-                     a=(v==3)?1:0; f=(v>=2)?1:0; print $2,$3,length($3),$4,$5,$6,v,a,a,f }' \
+            | awk 'BEGIN{OFS="\t"; print "name","seq","len","att_prob","lstm_prob","bert_prob","n_votes","is_AMP","AMP_pred","is_AMP_flex","is_AMP2"}
+                   { v=0; k=0; if($4!="NA"&&$4>0.5){v++;k++} if($5!="NA"&&$5>0.5){v++;k++} if($6!="NA"&&$6>0.5)v++;
+                     a=(v==3)?1:0; f=(v>=2)?1:0; a2=(k==2)?1:0; print $2,$3,length($3),$4,$5,$6,v,a,a,f,a2 }' \
             > "$gdir/aggregated_results.tsv"
         n_in=$(grep -c '^>' "$fa" || echo 0); n_out=$(( $(wc -l < "$gdir/aggregated_results.tsv") - 1 ))
         rm -f "$gdir/.recs_by_seq"
@@ -299,19 +311,22 @@ fi
 if [ "$STEP" = "all" ] || [ "$STEP" = "join" ] || [ "$STEP" = "summary" ]; then
     LOG "[5/5] 生成汇总表 ..."
     SUMMARY="$RES/amp_summary.tsv"; ALL="$RES/amp_all_peptides.tsv"
-    printf 'cohort\tgroup\tn_seq\tn_AMP3\tAMP3_pct\tn_AMP_flex2\tAMP_flex2_pct\n' > "$SUMMARY"
+    printf 'cohort\tgroup\tn_seq\tn_AMP2_att_lstm\tAMP2_pct\tn_AMP3\tAMP3_pct\tn_AMP_flex2\tAMP_flex2_pct\n' > "$SUMMARY"
     MODE_USED="$(cat "$BERT_NEED.mode" 2>/dev/null || echo 0)"
-    if [ "$MODE_USED" = "strict" ]; then
+    if [ "$MODE_USED" = "skip" ]; then
+        echo "  [注意] 未跑 BERT: 以 n_AMP2_att_lstm / is_AMP2 (Attention 与 LSTM 都 >0.5) 为最终判定; n_AMP3 恒为 0"
+        echo "未跑 BERT (BERT_CASCADE=skip): 以 is_AMP2 (Attention & LSTM 两票) 为最终判定; is_AMP/n_AMP3 恒为 0。" > "$RES/README_cascade.txt"
+    elif [ "$MODE_USED" = "strict" ]; then
         echo "  [注意] 级联模式 strict: n_AMP3/is_AMP 精确; n_AMP_flex2/is_AMP_flex 为下界 (未跑 BERT 的序列按 0 票计)"
         echo "级联模式 strict: 仅三票 is_AMP 精确; is_AMP_flex 为下界。" > "$RES/README_cascade.txt"
     fi
-    printf 'cohort\tgroup\tname\tseq\tlen\tatt_prob\tlstm_prob\tbert_prob\tn_votes\tis_AMP\tis_AMP_flex\n' > "$ALL"
+    printf 'cohort\tgroup\tname\tseq\tlen\tatt_prob\tlstm_prob\tbert_prob\tn_votes\tis_AMP2\tis_AMP\tis_AMP_flex\n' > "$ALL"
     for fa in "${GROUP_FAS[@]}"; do
         cohort="$(basename "$(dirname "$fa")")"; grp="$(basename "$fa" .fa)"
         f="$RES/$cohort/$grp/aggregated_results.tsv"; [ -s "$f" ] || continue
-        awk -v c="$cohort" -v g="$grp" 'BEGIN{OFS="\t"} NR>1{n++; a+=$8; fl+=$10}
-             END{printf "%s\t%s\t%d\t%d\t%.2f\t%d\t%.2f\n", c, g, n, a, (n?100*a/n:0), fl, (n?100*fl/n:0)}' "$f" >> "$SUMMARY"
-        awk -v c="$cohort" -v g="$grp" 'BEGIN{OFS="\t"} NR>1{print c,g,$1,$2,$3,$4,$5,$6,$7,$8,$10}' "$f" >> "$ALL"
+        awk -v c="$cohort" -v g="$grp" 'BEGIN{OFS="\t"} NR>1{n++; a+=$8; fl+=$10; a2+=$11}
+             END{printf "%s\t%s\t%d\t%d\t%.2f\t%d\t%.2f\t%d\t%.2f\n", c, g, n, a2, (n?100*a2/n:0), a, (n?100*a/n:0), fl, (n?100*fl/n:0)}' "$f" >> "$SUMMARY"
+        awk -v c="$cohort" -v g="$grp" 'BEGIN{OFS="\t"} NR>1{print c,g,$1,$2,$3,$4,$5,$6,$7,$11,$8,$10}' "$f" >> "$ALL"
     done
     echo ""; column -t -s $'\t' "$SUMMARY" 2>/dev/null || cat "$SUMMARY"
     echo ""

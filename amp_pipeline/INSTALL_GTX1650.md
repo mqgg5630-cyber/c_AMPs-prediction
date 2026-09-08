@@ -149,3 +149,15 @@ BERT 吞吐再提升的手段（按性价比）：
 | 笔记本接电源 + Windows 电源模式"最佳性能" | 可达 +50% | 1650 在电池/省电模式下 SM 时钟会掉到 300~600 MHz；看 `work/gpu_util.log` 的 `clocks.sm` 应在 1,400+ MHz |
 | `BERT_MAX_SEQ_LENGTH=52`（50 AA + 2） | +20% | 仅当 >50 AA 的序列极少时 |
 | 换到有 RTX 3060 以上或服务器 GPU | 10~30× | 若可用 HPC，用 `run_prediction_slurm.sh` |
+
+### 6) 只跑 Attention + LSTM（不跑 BERT）拿到四个队列全部结果
+```bash
+nohup env BERT_CASCADE=skip bash amp_pipeline/run_unique_pipeline.sh \
+    ~/data/comparable_sorf_grouped_catalog amp_results > run_keras_only.log 2>&1 &
+tail -f run_keras_only.log
+```
+- 判定列用 `is_AMP2`（Attention 与 LSTM 都 > 0.5）；`bert_prob` 全为 NA，`is_AMP`（三票）恒 0。
+- 汇总 `amp_results/results/amp_summary.tsv` 第 4/5 列 `n_AMP2_att_lstm / AMP2_pct` 即每组结果。
+- 预计 1 亿唯一序列 ≈ 9 小时（Keras 6,600 条/s）+ 去重/回填 < 1 小时。
+- 之后想补 BERT：`STEP=bert BERT_CASCADE=strict bash amp_pipeline/run_unique_pipeline.sh <同样两个参数>`，
+  只对两票都过的序列跑 BERT，然后 `STEP=join` 重新回填即可（Keras 结果全部复用）。
