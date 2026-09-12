@@ -11,9 +11,23 @@
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-RES_ROOT="${1:?用法: bash bench_bert_amp2.sh <amp_results 目录>}"
-UNIQ="$RES_ROOT/amp2_fasta/unique_amp2.txt"
-[ -s "$UNIQ" ] || { echo "[错误] 找不到 $UNIQ, 先运行: bash amp_pipeline/extract_amp2_fasta.sh $RES_ROOT"; exit 1; }
+RES_ROOT="$(readlink -f "${1:?用法: bash bench_bert_amp2.sh <amp_results 目录>}")"
+# unique_amp2.txt 可能在 amp_results/amp2_fasta/ 或已移动到同级 amp2_fasta_export/
+UNIQ=""
+for c in "$RES_ROOT/amp2_fasta/unique_amp2.txt" "$(dirname "$RES_ROOT")/amp2_fasta_export/unique_amp2.txt" "$PROJECT_DIR/amp2_fasta_export/unique_amp2.txt"; do
+    [ -s "$c" ] && UNIQ="$c" && break
+done
+[ -n "$UNIQ" ] || { echo "[错误] 找不到 unique_amp2.txt, 先运行: bash amp_pipeline/extract_amp2_fasta.sh $RES_ROOT"; exit 1; }
+echo " 输入: $UNIQ"
+
+# 本地 vocab: 避免 bert_sklearn 每次先去 s3.amazonaws.com 拉 vocab 超时 (加载慢 2 分钟)
+LOCAL_BERT="$PROJECT_DIR/Models/bert-base-uncased"
+if [ ! -f "$LOCAL_BERT/vocab.txt" ]; then
+    mkdir -p "$LOCAL_BERT"
+    v=$(ls -S "$HOME/.pytorch_pretrained_bert/"*vocab* "$HOME/.pytorch_pretrained_bert/"26bc1ad6* 2>/dev/null | grep -v '\.json$' | head -1)
+    [ -z "$v" ] && v=$(grep -l "\[CLS\]" "$HOME/.pytorch_pretrained_bert/"* 2>/dev/null | head -1)
+    [ -n "$v" ] && cp "$v" "$LOCAL_BERT/vocab.txt" && echo " 已把缓存 vocab 复制到 $LOCAL_BERT/vocab.txt"
+fi
 N="${N:-20000}"
 CONDA_BASE="$(conda info --base 2>/dev/null || echo "$HOME/miniconda3")"
 PY_BERT="${ENV_BERT:-$CONDA_BASE/envs/py36}/bin/python"

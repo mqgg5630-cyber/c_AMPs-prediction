@@ -2,7 +2,7 @@
 # ==============================================================================
 # extract_amp2_fasta.sh —— 从 run_unique_pipeline.sh 的结果中提取 Attention & LSTM 两票都 >0.5 的肽段
 #
-# 产物 (默认写到 <out_dir>/amp2_fasta/):
+# 产物 (默认写到与 <amp_results> 同级的 amp2_fasta_export/):
 #   <Cohort>/<group>.amp2.fa        每组的两票 AMP 候选 (FASTA, header 为原 name, 保留组内重复记录)
 #   <Cohort>/<group>.amp2.tsv       同上, 表格: name seq len att_prob lstm_prob
 #   unique_amp2.fa / unique_amp2.txt 全部唯一两票序列 (跨组去重, 给 BERT 用; header 为 u<序号>)
@@ -19,7 +19,7 @@ export LC_ALL=C
 
 RES_ROOT="${1:?用法: bash extract_amp2_fasta.sh <amp_results 目录> [输出目录]}"
 RES="$RES_ROOT/results"; WORK="$RES_ROOT/work"
-OUT="${2:-$RES_ROOT/amp2_fasta}"
+OUT="${2:-$(dirname "$(readlink -f "$RES_ROOT")")/amp2_fasta_export}"
 THRESH="${THRESH:-0.5}"
 [ -d "$RES" ] || { echo "[错误] 找不到 $RES (请传 run_unique_pipeline.sh 的输出目录)"; exit 1; }
 mkdir -p "$OUT"
