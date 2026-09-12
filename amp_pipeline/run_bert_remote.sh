@@ -26,7 +26,7 @@ IN="${1:?用法: bash run_bert_remote.sh <unique_amp2.txt|.fa> [输出目录]}"
 IN="$(readlink -f "$IN")"
 OUT="$(readlink -f "${2:-$PROJECT_DIR/bert_remote}")"; mkdir -p "$OUT"
 MODE="${MODE:-run}"
-CONDA_BASE="$(conda info --base 2>/dev/null || echo "$HOME/miniconda3")"
+CONDA_BASE="$(conda info --base 2>/dev/null | grep -m1 "^/" || true)"; [ -d "$CONDA_BASE" ] || CONDA_BASE="$HOME/miniconda3"
 PY_BERT="${ENV_BERT:-$CONDA_BASE/envs/py36}/bin/python"
 [ -x "$PY_BERT" ] || { echo "[错误] 找不到 $PY_BERT (可用 ENV_BERT=/path/to/env 指定)"; exit 1; }
 [ -s "$PROJECT_DIR/Models/bert.bin" ] || { echo "[错误] 缺 Models/bert.bin"; exit 1; }

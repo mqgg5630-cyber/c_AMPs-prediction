@@ -25,7 +25,7 @@ echo " 输入: $UNIQ"
 bash "$SCRIPT_DIR/stage_local_bert_base.sh" || true
 
 N="${N:-20000}"
-CONDA_BASE="$(conda info --base 2>/dev/null || echo "$HOME/miniconda3")"
+CONDA_BASE="$(conda info --base 2>/dev/null | grep -m1 "^/" || true)"; [ -d "$CONDA_BASE" ] || CONDA_BASE="$HOME/miniconda3"
 PY_BERT="${ENV_BERT:-$CONDA_BASE/envs/py36}/bin/python"
 export BERT_EVAL_BATCH_SIZE="${BERT_EVAL_BATCH_SIZE:-512}"
 export BERT_MAX_SEQ_LENGTH="${BERT_MAX_SEQ_LENGTH:-66}"

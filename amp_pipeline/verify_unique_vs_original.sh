@@ -9,7 +9,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 N="${1:-200}"
-CONDA_BASE="$(conda info --base 2>/dev/null || echo "$HOME/miniconda3")"
+CONDA_BASE="$(conda info --base 2>/dev/null | grep -m1 "^/" || true)"; [ -d "$CONDA_BASE" ] || CONDA_BASE="$HOME/miniconda3"
 PY_TF="${ENV_TF:-$CONDA_BASE/envs/camps-tf114}/bin/python"
 PY_BERT="${ENV_BERT:-$CONDA_BASE/envs/py36}/bin/python"
 W="$PROJECT_DIR/test_run/verify"; mkdir -p "$W"
