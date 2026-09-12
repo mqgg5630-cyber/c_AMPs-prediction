@@ -126,20 +126,15 @@ def inspect_batch(path):
             f"缺少 sequence 列: {path}\n实际列: {columns[:10]} ...")
 
     all_prob_cols = [c for c in columns if str(c).endswith("_prob")]
-    expected_pairs = [
-        (activity, f"{activity}_prob")
-        for activity in EXPECTED_ACTIVITIES
-        if f"{activity}_prob" in columns
-    ]
-
-    # 正常情况下使用预先定义的 22 个模型顺序；若列名有变化，则退回到 CSV 中
-    # 实际检测到的所有 *_prob 列，并在屏幕上给出警告。
-    if len(expected_pairs) == len(EXPECTED_ACTIVITIES):
-        pairs = expected_pairs
+    # 预测脚本实际写出的列名以 CSV 表头为准。只要实际检测到 22 个
+    # *_prob 列，就按 CSV 中的顺序处理；这样即使模型文件夹名称中有两个
+    # 字符与预设名称不同，也不会误报或漏掉模型。
+    if len(all_prob_cols) == len(EXPECTED_ACTIVITIES):
+        pairs = [(str(c)[:-len("_prob")], c) for c in all_prob_cols]
     else:
         print(
-            f"  ⚠️ {os.path.basename(path)}: 预期 22 个模型列只找到 "
-            f"{len(expected_pairs)} 个，将使用实际检测到的 {len(all_prob_cols)} 个 *_prob 列",
+            f"  ⚠️ {os.path.basename(path)}: 实际检测到 "
+            f"{len(all_prob_cols)} 个 *_prob 列（预期 22 个）",
             flush=True,
         )
         pairs = [(str(c)[:-len("_prob")], c) for c in all_prob_cols]
