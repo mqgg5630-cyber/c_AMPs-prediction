@@ -9,6 +9,7 @@
 | `extract_multiact_hits.py` | 提取 **22 种活性概率全部 > 阈值**（默认 0.8）的肽段，输出 FASTA + 数量统计表 |
 | `extract_single_activity_hits.py` | 指定数据集后，分别提取每个模型自身 **prob > 阈值** 的肽段，输出 22 个 FASTA + 统计表 |
 | `extract_healthy_single_activity_hits.py` | 健康人组快捷入口，默认处理 `Healthy_Specific` 的 22 个模型 |
+| `summarize_two_groups.py` | 将健康人组和牙周炎组结果整理成两张带命中率的汇总表 |
 
 ## 用法
 
@@ -82,6 +83,24 @@ python3 extract_single_activity_hits.py <results_dir> --dedup
 ```bash
 python3 extract_single_activity_hits.py <results_dir> --chunksize 50000
 ```
+
+## 两个组整理成两张汇总表
+
+健康人组和牙周炎组都完成后，运行：
+
+```bash
+python3 summarize_two_groups.py \
+    /home/wsh/UniDL4BioPep-main/Predictions_Results_With_Probability_20260604_204744
+```
+
+会生成：
+
+```text
+Healthy_Specific_model_summary_gt0.8.csv
+Periodontitis_Specific_model_summary_gt0.8.csv
+```
+
+表格中包含每个模型的输入数、`prob > 0.8` 命中数、命中率和 FASTA 数量。
 
 ## 输入 / 输出
 
