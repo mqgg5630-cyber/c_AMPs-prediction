@@ -35,7 +35,7 @@ join -t $'\t' -a1 -e NA -o 2.2 "$UNIQ" "$WORK/.need_p" > "$WORK/bert_proba.tsv"
 rm -f "$WORK/.need_p"
 [ "$(wc -l < "$WORK/bert_proba.tsv")" -eq "$N_U" ] || { echo "[错误] 对齐后行数不对"; exit 1; }
 touch "$WORK/bert_proba.tsv.done"
-rm -f "$WORK/merged_proba.tsv.done" "$RES_ROOT"/results/*/*/aggregated_results.tsv.done 2>/dev/null
+rm -f "$WORK/unique_with_proba.tsv" "$WORK/unique_with_proba.tsv.done" "$RES_ROOT"/results/*/*/aggregated_results.tsv.done 2>/dev/null
 echo "bert_proba.tsv 已生成 ($N_U 行, 其中真实 BERT $N_R 条). 现在重新合并/回填/汇总 ..."
 
 # 重新跑流程: 步骤 1~3 都有 .done 会直接跳过, 只做合并/回填/汇总
