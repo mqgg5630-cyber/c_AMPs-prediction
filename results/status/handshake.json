@@ -1,9 +1,9 @@
 {
   "round": 1,
   "arena_state": "awaiting_check",
-  "local_state": "pending",
+  "local_state": "failed",
   "arena_updated": "2026-09-23 02:27:59",
-  "local_updated": null,
-  "host": "",
+  "local_updated": "2026-09-23 11:02:13",
+  "host": "LAPTOP-R77M5D6M",
   "note": "round 1: Linux 本机打通自检 — gate + GPU + camps-tf114/py36 + att/lstm/bert 三模型 (code/local_check.sh)"
 }
