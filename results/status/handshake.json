@@ -1,9 +1,9 @@
 {
   "round": 6,
-  "arena_state": "awaiting_check",
+  "arena_state": "accepted",
   "local_state": "passed",
-  "arena_updated": "2026-09-23 07:32:17",
+  "arena_updated": "2026-09-23 07:41:03",
   "local_updated": "2026-09-23 15:36:48",
   "host": "LAPTOP-R77M5D6M",
-  "note": "round 6: 家族层面分析 (mmseqs 聚类 + MAG 流行率检验), 首次会自动 conda 安装 mmseqs2, 预计 1-3 小时"
+  "note": "round 6: job exited 0 but produced nothing; re-dispatching with log capture"
 }

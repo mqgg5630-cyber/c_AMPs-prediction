@@ -128,7 +128,6 @@ bert_proba.tsv
 input_formatted_300.txt
 Models/bert-base-uncased/
 *.log
-results/jobs/*.log
 results/group_specific/fasta/
 results/group_specific/*/*_specific.tsv
 results/group_specific/*/shared.tsv

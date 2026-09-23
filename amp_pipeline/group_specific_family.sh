@@ -24,6 +24,7 @@ if [ -z "$MM" ]; then
   CB="$(conda info --base 2>/dev/null | grep -m1 '^/' || echo "$HOME/miniconda3")"
   [ -x "$CB/envs/mmseqs2/bin/mmseqs" ] || { log "安装 mmseqs2 (conda, bioconda) ..."; "$CB/bin/conda" create -y -q -n mmseqs2 -c conda-forge -c bioconda mmseqs2 >/dev/null 2>&1 || "$CB/bin/conda" create -y -n mmseqs2 -c conda-forge -c bioconda mmseqs2; }
   MM="$CB/envs/mmseqs2/bin/mmseqs"
+  [ -x "$MM" ] || { echo "[错误] mmseqs2 安装失败 ($MM 不存在). 手动: conda create -n mmseqs2 -c conda-forge -c bioconda mmseqs2"; exit 1; }
 fi
 log "mmseqs: $MM ($($MM version 2>/dev/null | head -1))"
 
