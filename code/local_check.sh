@@ -4,6 +4,7 @@
 # Repo-specific checks for c_AMPs-prediction: gate + GPU + the three AMP models.
 set -u -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
+export PATH="$PATH:/usr/lib/wsl/lib:/usr/local/cuda/bin:$HOME/miniconda3/bin:$HOME/miniconda3/condabin"   # cron has a minimal PATH
 fail=0
 echo "== host: $(hostname)  $(date '+%F %T')  repo: $PWD"
 echo "== 1. gate"

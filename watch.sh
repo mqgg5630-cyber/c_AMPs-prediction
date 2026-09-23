@@ -74,7 +74,7 @@ case "${1:-}" in
   --register)
     N="${2:-2}"; command -v crontab >/dev/null || { echo "[ERROR] crontab not found: sudo apt install cron && sudo service cron start"; exit 1; }
     pgrep -x cron >/dev/null || pgrep -x crond >/dev/null || echo "[WARN] cron daemon not running - WSL: sudo service cron start  (add to /etc/wsl.conf [boot] command=service cron start)"
-    ( crontab -l 2>/dev/null | grep -v "$TAG"; echo "*/$N * * * * cd '$REPO' && PATH=\$PATH:/usr/local/bin:$HOME/miniconda3/bin bash '$SELF' --once # $TAG" ) | crontab -
+    ( crontab -l 2>/dev/null | grep -v "$TAG"; echo "*/$N * * * * cd '$REPO' && PATH=\$PATH:/usr/local/bin:/usr/lib/wsl/lib:$HOME/miniconda3/bin:$HOME/miniconda3/condabin bash '$SELF' --once # $TAG" ) | crontab -
     echo "OK: watcher registered (cron every $N min)  log: $LOG"; echo "== smoke test (one poll now):"; bash "$SELF" --test;;
   --unregister) ( crontab -l 2>/dev/null | grep -v "$TAG" ) | crontab -; echo "OK: watcher unregistered";;
   --status)
