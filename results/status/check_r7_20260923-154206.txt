@@ -1,0 +1,172 @@
+check round 7 on LAPTOP-R77M5D6M - failed (exit 1)
+cmd: bash code/local_check.sh
+elapsed: 92s
+
+== host: LAPTOP-R77M5D6M  2026-09-23 15:42:06  repo: /home/w24e/0amp/att-lstm-bert
+== 1. gate
+OK: all .ps1 files are ASCII-only
+OK: sync.config.json branch=arena/01a07992-c-amps-prediction
+OK: sync.config.json branch matches HEAD (arena/01a07992-c-amps-prediction)
+OK: root scripts identical to skills/git-sync/scripts
+OK: no drive-style variable typos ($var:)
+== exits in Invoke-PollRound: 6
+OK: every exit path sets its closing summary
+== exits in Invoke-PollOnce: 2 (lock held / crashed / normal)
+OK: loop closing lines covered (6 exit paths, all with their own summary)
+SKIP: no PowerShell on PATH - .ps1 syntax not parse-checked here
+OK: gate
+== 2. GPU
+NVIDIA GeForce GTX 1650, 4096 MiB, 576.02
+== 3. environments
+OK: /home/w24e/miniconda3/envs/camps-tf114
+OK: /home/w24e/miniconda3/envs/py36
+== 4. models
+OK: Models/att.h5 (1.7M)
+OK: Models/lstm.h5 (2.4M)
+OK: Models/bert.bin (418M)
+== 5. GPU + model smoke test (test_gpu.sh)
+==================================================
+ [1/3] 驱动层: nvidia-smi
+==================================================
+name, driver_version, memory.total [MiB], memory.used [MiB]
+NVIDIA GeForce GTX 1650, 576.02, 4096 MiB, 675 MiB
+  [PASS] 检测到 GTX 1650
+
+==================================================
+ [2/3] camps-tf114: TensorFlow 1.14 GPU
+==================================================
+  tensorflow 1.14.0 | built_with_cuda: True
+  [PASS] TF GPU: device: 0, name: NVIDIA GeForce GTX 1650, pci bus id: 0000:01:00.0, compute capability: 7.5 | 可用显存 3142 MB
+  [PASS] GPU 上 2048x2048 matmul 耗时 11.2 ms
+  [PASS] att.h5 加载并前向成功, 输入 (None, 300) -> 输出 (8, 1)
+  [PASS] lstm.h5 加载并前向成功, 输入 (None, 300) -> 输出 (8, 1)
+Using TensorFlow backend.
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:517: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:4138: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3976: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:131: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:133: The name tf.placeholder_with_default is deprecated. Please use tf.compat.v1.placeholder_with_default instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3445: calling dropout (from tensorflow.python.ops.nn_ops) with keep_prob is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:174: The name tf.get_default_session is deprecated. Please use tf.compat.v1.get_default_session instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/optimizers.py:790: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/tensorflow/python/ops/nn_impl.py:180: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+  [PASS] camps-tf114 GPU 测试通过
+
+==================================================
+ [3/3] py36: PyTorch CUDA (BERT)
+==================================================
+09/23/2026 15:43:00 - INFO - pytorch_pretrained_bert.tokenization -   loading vocabulary file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt from cache at /home/w24e/.pytorch_pretrained_bert/26bc1ad6c0ac742e9b52263248f6d0f00068293b33709fae12320c0e35ccfbbb.542ce4285a40d23a559526243235df47c5f75c197f04f37d1a0c124c32c9a084
+09/23/2026 15:43:02 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   loading weights file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-pytorch_model.bin from cache at /home/w24e/.cache/torch/pytorch_pretrained_bert/aa1ef1aede4482d0dbcd4d52baad8ae300e60902e88fcb0bebdec09afd232066.36ca03ab34a1a5d5fa7bc3d03d55c4fa650fed07220e2eeebc06ce58d0e9a157
+09/23/2026 15:43:02 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-config.json from cache at /home/w24e/.cache/torch/pytorch_pretrained_bert/4dad0251492946e18ac39290fcfe91b89d370fee250efe9521476438fe8ca185.7156163d5fdc189c3016baca0775ffce230789d7fa2a42ef516483e4ca884517
+09/23/2026 15:43:02 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   Model config {
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "pad_token_id": 0,
+  "type_vocab_size": 2,
+  "vocab_size": 30522
+}
+
+  torch 1.10.1+cu113 | cuda build: 11.3 | cudnn: 8200
+  [PASS] GPU: NVIDIA GeForce GTX 1650 | compute capability sm_75 | 显存 4295 MB
+  torch 内置架构: ['sm_37', 'sm_50', 'sm_60', 'sm_70', 'sm_75', 'sm_80', 'sm_86']
+  [PASS] GPU 上 2048x2048 matmul 耗时 8.7 ms
+Better speed can be achieved with apex installed from https://www.github.com/nvidia/apex.
+  [PASS] bert_sklearn 0.2.0 已可导入
+Loading model from /home/w24e/0amp/att-lstm-bert/Models/bert.bin...
+Defaulting to linear classifier/regressor
+Building sklearn classifier...
+  [PASS] bert.bin 加载成功 (bert_model=bert-base-uncased, max_seq_length=128)
+  峰值显存占用 912 MB
+  [PASS] py36 CUDA 测试通过
+
+==================================================
+ 结果: PASS=3  FAIL=0
+==================================================
+OK: test_gpu.sh
+== 6. job: code/job.sh
+FAIL: job (exit 1)
+--- job log tail (full log: results/jobs/job_20260923-154306.log, pushed back with this round) ---
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/linux-64/repodata.json.zst
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/noarch/repodata.json.zst
+
+Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/r/noarch/repodata.json.zst
+
+\ | / - \ | / - \ | / - \ | / - \ | / - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/bioconda/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/conda-forge/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/conda-forge/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/bioconda/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/r/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/main/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/main/linux-64/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/r/noarch/repodata.json.zst
+
+Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/noarch/repodata.json.zst
+
+\ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/bioconda/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/conda-forge/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/conda-forge/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/cloud/bioconda/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/main/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/r/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/main/linux-64/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/free/noarch/repodata.json.zst
+
+Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='mirrors.ustc.edu.cn', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /anaconda/pkgs/r/noarch/repodata.json.zst
+
+failed
+
+CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/linux-64/repodata.json>
+Elapsed: -
+
+An HTTP error occurred when trying to retrieve this URL.
+HTTP errors are often intermittent, and a simple retry will get you on your way.
+'https//mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/linux-64'
+
+
++ rc=1
++ set +x
+JOB FAILED: SUMMARY.md missing (rc=1)
+== result: FAILED
