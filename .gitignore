@@ -129,3 +129,11 @@ input_formatted_300.txt
 Models/bert-base-uncased/
 *.log
 results/jobs/*.log
+results/group_specific/fasta/
+results/group_specific/*/*_specific.tsv
+results/group_specific/*/shared.tsv
+results/group_specific/*/membership.tsv
+results/group_specific/*/core5.tsv
+results/group_specific/*/late_only_*.tsv
+results/group_specific/*/early_only_*.tsv
+results/group_specific/sets/

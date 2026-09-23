@@ -1,6 +1,10 @@
 {
-  "description": "交付: 中文结果与方法文档 (md + docx) 已同步到本机",
-  "require_files": ["deliverable/AMP三模型预测_结果与方法.md", "deliverable/AMP三模型预测_结果与方法.docx", "results/status/check_r*_*.txt"],
-  "require_contains": {"deliverable/AMP三模型预测_结果与方法.md": "12,665,622", "results/status/check_r*_*.txt": "== result: PASSED"},
-  "min_bytes": {"deliverable/AMP三模型预测_结果与方法.docx": 30000}
+  "description": "组特异性 AMP 集合分析在本机跑完: 四个队列的汇总表与特征表存在且非空",
+  "require_files": ["results/group_specific/SUMMARY.md",
+    "results/group_specific/Cohort2_Matched265_NCvsAD/set_summary.tsv", "results/group_specific/Cohort4_Full476_NCvsAD/set_summary.tsv",
+    "results/group_specific/Cohort1_Matched265_5Stage/pattern_counts.tsv", "results/group_specific/Cohort3_Full476_5Stage/pattern_counts.tsv",
+    "results/group_specific/Cohort2_Matched265_NCvsAD/features.tsv", "results/group_specific/Cohort1_Matched265_5Stage/features.tsv",
+    "results/group_specific/Cohort2_Matched265_NCvsAD/top200_AD_specific.tsv"],
+  "require_contains": {"results/group_specific/SUMMARY.md": "Jaccard", "results/group_specific/Cohort1_Matched265_5Stage/stage_summary.tsv": "AD"},
+  "min_bytes": {"results/group_specific/SUMMARY.md": 2000}
 }
