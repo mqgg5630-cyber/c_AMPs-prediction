@@ -1,0 +1,26 @@
+{
+  "host": "LAPTOP-R77M5D6M",
+  "stamp": "20260923-110227",
+  "os": "Ubuntu 24.04.4 LTS (WSL2)",
+  "cpu": "Intel(R) Core(TM) i5-10200H CPU @ 2.40GHz  x6",
+  "memory": "15 GB total, 13 GB available",
+  "disk": "737G free of 1007G (/)",
+  "gpu": "NVIDIA GeForce GTX 1650, 4096 MiB",
+  "driver": "576.02",
+  "conda_base": "/home/w24e/miniconda3",
+  "conda_envs": [
+    "AMPidentifier",
+    "HMD-AMP",
+    "NTxPred2",
+    "amp-esm",
+    "amppre",
+    "bioskills",
+    "bitoxnet",
+    "camps-tf114",
+    "docking",
+    "ilearnplus",
+    "orange3",
+    "py36"
+  ],
+  "platform": "linux"
+}
