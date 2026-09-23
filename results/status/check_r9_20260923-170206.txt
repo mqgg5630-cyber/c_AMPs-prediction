@@ -1,0 +1,179 @@
+check round 9 on LAPTOP-R77M5D6M - failed (exit 1)
+cmd: bash code/local_check.sh
+elapsed: 1198s
+
+== host: LAPTOP-R77M5D6M  2026-09-23 17:02:06  repo: /home/w24e/0amp/att-lstm-bert
+== 1. gate
+OK: all .ps1 files are ASCII-only
+OK: sync.config.json branch=arena/01a07992-c-amps-prediction
+OK: sync.config.json branch matches HEAD (arena/01a07992-c-amps-prediction)
+OK: root scripts identical to skills/git-sync/scripts
+OK: no drive-style variable typos ($var:)
+== exits in Invoke-PollRound: 6
+OK: every exit path sets its closing summary
+== exits in Invoke-PollOnce: 2 (lock held / crashed / normal)
+OK: loop closing lines covered (6 exit paths, all with their own summary)
+SKIP: no PowerShell on PATH - .ps1 syntax not parse-checked here
+OK: gate
+== 2. GPU
+NVIDIA GeForce GTX 1650, 4096 MiB, 576.02
+== 3. environments
+OK: /home/w24e/miniconda3/envs/camps-tf114
+OK: /home/w24e/miniconda3/envs/py36
+== 4. models
+OK: Models/att.h5 (1.7M)
+OK: Models/lstm.h5 (2.4M)
+OK: Models/bert.bin (418M)
+== 5. GPU + model smoke test (test_gpu.sh)
+==================================================
+ [1/3] 驱动层: nvidia-smi
+==================================================
+name, driver_version, memory.total [MiB], memory.used [MiB]
+NVIDIA GeForce GTX 1650, 576.02, 4096 MiB, 841 MiB
+  [PASS] 检测到 GTX 1650
+
+==================================================
+ [2/3] camps-tf114: TensorFlow 1.14 GPU
+==================================================
+  tensorflow 1.14.0 | built_with_cuda: True
+  [PASS] TF GPU: device: 0, name: NVIDIA GeForce GTX 1650, pci bus id: 0000:01:00.0, compute capability: 7.5 | 可用显存 3142 MB
+  [PASS] GPU 上 2048x2048 matmul 耗时 10.5 ms
+  [PASS] att.h5 加载并前向成功, 输入 (None, 300) -> 输出 (8, 1)
+  [PASS] lstm.h5 加载并前向成功, 输入 (None, 300) -> 输出 (8, 1)
+Using TensorFlow backend.
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:517: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:4138: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3976: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:131: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:133: The name tf.placeholder_with_default is deprecated. Please use tf.compat.v1.placeholder_with_default instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3445: calling dropout (from tensorflow.python.ops.nn_ops) with keep_prob is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:174: The name tf.get_default_session is deprecated. Please use tf.compat.v1.get_default_session instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/keras/optimizers.py:790: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /home/w24e/miniconda3/envs/camps-tf114/lib/python3.6/site-packages/tensorflow/python/ops/nn_impl.py:180: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+  [PASS] camps-tf114 GPU 测试通过
+
+==================================================
+ [3/3] py36: PyTorch CUDA (BERT)
+==================================================
+09/23/2026 17:03:19 - ERROR - pytorch_pretrained_bert.tokenization -   Model name 'bert-base-uncased' was not found in model name list (bert-base-uncased, bert-large-uncased, bert-base-cased, bert-large-cased, bert-base-multilingual-uncased, bert-base-multilingual-cased, bert-base-chinese). We assumed 'https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt' was a path or url but couldn't find any file associated to this path or url.
+09/23/2026 17:03:19 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   loading weights file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-pytorch_model.bin from cache at /home/w24e/.cache/torch/pytorch_pretrained_bert/aa1ef1aede4482d0dbcd4d52baad8ae300e60902e88fcb0bebdec09afd232066.36ca03ab34a1a5d5fa7bc3d03d55c4fa650fed07220e2eeebc06ce58d0e9a157
+09/23/2026 17:03:19 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-config.json from cache at /home/w24e/.cache/torch/pytorch_pretrained_bert/4dad0251492946e18ac39290fcfe91b89d370fee250efe9521476438fe8ca185.7156163d5fdc189c3016baca0775ffce230789d7fa2a42ef516483e4ca884517
+09/23/2026 17:03:19 - INFO - bert_sklearn.model.pytorch_pretrained.modeling -   Model config {
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "pad_token_id": 0,
+  "type_vocab_size": 2,
+  "vocab_size": 30522
+}
+
+  torch 1.10.1+cu113 | cuda build: 11.3 | cudnn: 8200
+  [PASS] GPU: NVIDIA GeForce GTX 1650 | compute capability sm_75 | 显存 4295 MB
+  torch 内置架构: ['sm_37', 'sm_50', 'sm_60', 'sm_70', 'sm_75', 'sm_80', 'sm_86']
+  [PASS] GPU 上 2048x2048 matmul 耗时 9.2 ms
+Better speed can be achieved with apex installed from https://www.github.com/nvidia/apex.
+  [PASS] bert_sklearn 0.2.0 已可导入
+Loading model from /home/w24e/0amp/att-lstm-bert/Models/bert.bin...
+Defaulting to linear classifier/regressor
+Building sklearn classifier...
+  [PASS] bert.bin 加载成功 (bert_model=bert-base-uncased, max_seq_length=128)
+  峰值显存占用 912 MB
+  [PASS] py36 CUDA 测试通过
+
+==================================================
+ 结果: PASS=3  FAIL=0
+==================================================
+OK: test_gpu.sh
+== 6. job: code/job.sh  (watchdog: stall>25min, max 6h, progress pushed every 15min)
+[watch] pid=104172 log=results/jobs/job_20260923-170323.log
+[watch] 2026-09-23 17:03:54	elapsed=0.5min	log=507B	log_age=0.5min	cpu=1%	procs=6	stalled_polls=0	last: [2026-09-23 17:03:24] [A] 压缩比曲线: 每 64 条取 1 条 (约 197900 条)
+[watch] 2026-09-23 17:04:24	elapsed=1.0min	log=640B	log_age=0.1min	cpu=12%	procs=6	stalled_polls=0	last: [2026-09-23 17:04:16]     id=0.9 -> 395801 家族 / 197900 序列
+[watch] 2026-09-23 17:04:54	elapsed=1.5min	log=706B	log_age=0.3min	cpu=61%	procs=6	stalled_polls=0	last: [2026-09-23 17:04:36]     id=0.8 -> 395801 家族 / 197900 序列
+[watch] 2026-09-23 17:05:24	elapsed=2.0min	log=893B	log_age=0.1min	cpu=-55%	procs=7	stalled_polls=0	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:05:54	elapsed=2.5min	log=893B	log_age=0.6min	cpu=205%	procs=7	stalled_polls=1	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:06:24	elapsed=3.0min	log=893B	log_age=1.1min	cpu=126%	procs=7	stalled_polls=2	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:06:54	elapsed=3.5min	log=893B	log_age=1.6min	cpu=18%	procs=6	stalled_polls=3	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:07:24	elapsed=4.0min	log=893B	log_age=2.1min	cpu=108%	procs=6	stalled_polls=4	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:07:54	elapsed=4.5min	log=893B	log_age=2.6min	cpu=106%	procs=6	stalled_polls=5	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:08:24	elapsed=5.0min	log=893B	log_age=3.1min	cpu=-230%	procs=5	stalled_polls=6	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:08:54	elapsed=5.5min	log=893B	log_age=3.6min	cpu=-244%	procs=4	stalled_polls=7	last: [2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[watch] 2026-09-23 17:09:24	elapsed=6.0min	log=1029B	log_age=0.2min	cpu=-85%	procs=6	stalled_polls=0	last: [2026-09-23 17:09:13]     both 采样 13007
+[watch] 2026-09-23 17:09:54	elapsed=6.5min	log=1029B	log_age=0.7min	cpu=-19%	procs=5	stalled_polls=1	last: [2026-09-23 17:09:13]     both 采样 13007
+[watch] 2026-09-23 17:10:24	elapsed=7.0min	log=1582B	log_age=0.5min	cpu=404%	procs=7	stalled_polls=0	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:10:54	elapsed=7.5min	log=1582B	log_age=1.0min	cpu=560%	procs=7	stalled_polls=1	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:11:24	elapsed=8.0min	log=1582B	log_age=1.5min	cpu=-833%	procs=7	stalled_polls=2	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:11:54	elapsed=8.5min	log=1582B	log_age=2.0min	cpu=527%	procs=7	stalled_polls=3	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:12:24	elapsed=9.0min	log=1582B	log_age=2.5min	cpu=-547%	procs=7	stalled_polls=4	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:12:54	elapsed=9.5min	log=1582B	log_age=3.0min	cpu=591%	procs=7	stalled_polls=5	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:13:24	elapsed=10.0min	log=1582B	log_age=3.5min	cpu=475%	procs=7	stalled_polls=6	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:13:54	elapsed=10.5min	log=1582B	log_age=4.0min	cpu=-728%	procs=7	stalled_polls=7	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:14:24	elapsed=11.0min	log=1582B	log_age=4.5min	cpu=503%	procs=7	stalled_polls=8	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:14:54	elapsed=11.5min	log=1582B	log_age=5.0min	cpu=-846%	procs=7	stalled_polls=9	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:15:25	elapsed=12.0min	log=1582B	log_age=5.5min	cpu=140%	procs=6	stalled_polls=10	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:15:55	elapsed=12.5min	log=1582B	log_age=6.0min	cpu=542%	procs=6	stalled_polls=11	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:16:25	elapsed=13.0min	log=1582B	log_age=6.5min	cpu=590%	procs=6	stalled_polls=12	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:16:55	elapsed=13.5min	log=1582B	log_age=7.0min	cpu=592%	procs=6	stalled_polls=13	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:17:25	elapsed=14.0min	log=1582B	log_age=7.5min	cpu=-1661%	procs=6	stalled_polls=14	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:17:55	elapsed=14.5min	log=1582B	log_age=8.0min	cpu=550%	procs=6	stalled_polls=15	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:18:25	elapsed=15.0min	log=1582B	log_age=8.5min	cpu=-803%	procs=6	stalled_polls=16	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] progress push: ok
+[watch] 2026-09-23 17:19:07	elapsed=15.7min	log=1582B	log_age=0.7min	cpu=817%	procs=6	stalled_polls=17	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:19:37	elapsed=16.2min	log=1582B	log_age=1.2min	cpu=589%	procs=6	stalled_polls=18	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:20:07	elapsed=16.7min	log=1582B	log_age=1.7min	cpu=575%	procs=6	stalled_polls=19	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:20:37	elapsed=17.2min	log=1582B	log_age=2.2min	cpu=584%	procs=6	stalled_polls=20	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:21:07	elapsed=17.7min	log=1582B	log_age=2.7min	cpu=532%	procs=6	stalled_polls=21	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+[watch] 2026-09-23 17:21:37	elapsed=18.2min	log=1582B	log_age=3.2min	cpu=586%	procs=6	stalled_polls=22	last: [2026-09-23 17:09:54]   聚类 12665622 条 ...
+Terminated
+FAIL: job (exit 143 )
+--- job log tail (full log pushed back: results/jobs/job_20260923-170323.log) ---
+== mmseqs: /home/w24e/0amp/att-lstm-bert/tools/mmseqs/bin/mmseqs
+== 复用索引: -rw-rw-r-- 1 w24e w24e 1906218289 Sep 23 16:02 results/group_specific_family/work/all.tsv
++ bash amp_pipeline/group_specific_analysis2.sh /home/w24e/c_AMPs-prediction/amp_results results/group_specific_family2
+[2026-09-23 17:03:24] mmseqs: /home/w24e/0amp/att-lstm-bert/tools/mmseqs/bin/mmseqs
+[2026-09-23 17:03:24]   唯一三票 AMP: 12665622
+[2026-09-23 17:03:24] [A] 压缩比曲线: 每 64 条取 1 条 (约 197900 条)
+[2026-09-23 17:03:56]     id=0.99 -> 395801 家族 / 197900 序列
+[2026-09-23 17:04:16]     id=0.9 -> 395801 家族 / 197900 序列
+[2026-09-23 17:04:36]     id=0.8 -> 395801 家族 / 197900 序列
+[2026-09-23 17:04:58]     id=0.7 -> 395801 家族 / 197900 序列
+[2026-09-23 17:05:18]     id=0.6 -> 395801 家族 / 197900 序列
+[2026-09-23 17:05:18] [B] 最近邻同一性分析 ...
+[2026-09-23 17:09:13]     onlyAD 采样 20000
+[2026-09-23 17:09:13]     onlyNC 采样 20000
+[2026-09-23 17:09:13]     both 采样 13007
+query_set	target_set	n_with_hit	n_query	pct_with_hit(>=0.5)	median_fident	p90_fident	pct_ident>=0.9
+both	both	5197	-	-	1.000	1.000	100.0
+both	onlyAD	23	-	-	0.826	0.956	34.8
+both	onlyNC	14	-	-	0.750	0.954	21.4
+onlyAD	both	22	-	-	0.846	0.956	36.4
+onlyAD	onlyAD	13388	-	-	1.000	1.000	100.0
+onlyAD	onlyNC	53	-	-	0.800	0.944	20.8
+onlyNC	both	20	-	-	0.750	0.954	20.0
+onlyNC	onlyAD	52	-	-	0.800	0.944	17.3
+onlyNC	onlyNC	12556	-	-	1.000	1.000	100.0
+
+[2026-09-23 17:09:54] [C] 家族层面重叠 (FULL_ID=0.7) ...
+[2026-09-23 17:09:54]   聚类 12665622 条 ...
+== result: FAILED
