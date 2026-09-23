@@ -1,7 +1,6 @@
 {
-  "description": "c_AMPs-prediction: Linux 本机打通 —— 值守往返 + GPU/三模型自检通过",
-  "require_files": ["watch.sh", "sync.sh", "push.sh", "code/local_check.sh", "amp_pipeline/test_gpu.sh",
-                    "results/hardware/latest.json", "results/status/check_r*_*.txt"],
-  "require_contains": {"results/status/check_r*_*.txt": "== result: PASSED"},
-  "min_bytes": {"results/hardware/latest.json": 50}
+  "description": "交付: 中文结果与方法文档 (md + docx) 已同步到本机",
+  "require_files": ["deliverable/AMP三模型预测_结果与方法.md", "deliverable/AMP三模型预测_结果与方法.docx", "results/status/check_r*_*.txt"],
+  "require_contains": {"deliverable/AMP三模型预测_结果与方法.md": "12,665,622", "results/status/check_r*_*.txt": "== result: PASSED"},
+  "min_bytes": {"deliverable/AMP三模型预测_结果与方法.docx": 30000}
 }
