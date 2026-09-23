@@ -17,12 +17,14 @@ set -u -o pipefail
 _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$_d/gitsync-lib.sh" ]; then . "$_d/gitsync-lib.sh"; else . "$_d/skills/git-sync/scripts/gitsync-lib.sh"; fi
 ACC_DIR="$HOME/.config/git-sync/accounts"; mkdir -p "$ACC_DIR"; chmod 700 "$ACC_DIR"
+# curl must use the same proxy git uses (env vars may be unset / stale)
+GP="$(git config --global http.proxy 2>/dev/null || true)"; CURL=(curl -s -m 20); [ -n "$GP" ] && CURL+=(-x "$GP")
 URL="$(git remote get-url "$REMOTE")"
 OWNER_REPO="$(echo "$URL" | sed -E 's#.*github.com[:/]##; s#\.git$##')"
 
 test_account() {  # test_account <login> -> prints push=yes/no
   local tok; tok="$(cat "$ACC_DIR/$1" 2>/dev/null)"; [ -z "$tok" ] && { echo "no-token"; return; }
-  local perm; perm="$(curl -s -m 15 -H "Authorization: token $tok" "https://api.github.com/repos/$OWNER_REPO" | "$PY" -c 'import json,sys
+  local perm; perm="$("${CURL[@]}" -H "Authorization: token $tok" "https://api.github.com/repos/$OWNER_REPO" | "$PY" -c 'import json,sys
 try:
   d=json.load(sys.stdin); p=d.get("permissions",{}); print("yes" if p.get("push") else ("no(read-only)" if "id" in d else "no("+str(d.get("message",""))+")"))
 except Exception: print("no(api error)")')"
@@ -41,9 +43,12 @@ case "${1:-}" in
   --add)
     login="${2:?--add <login>}"
     if [ -n "${TOKEN:-}" ]; then tok="$TOKEN"; else read -r -s -p "Paste a GitHub token (PAT, repo scope) for $login: " tok; echo; fi
+    # accept a pasted ~/.git-credentials line or URL: keep only the token part
+    tok="$(printf '%s' "$tok" | tr -d '[:space:]' | sed -E 's#^https?://[^:]+:##; s#@github\.com.*$##')"
     [ -n "$tok" ] || { echo "[ERROR] empty token"; exit 1; }
-    me="$(curl -s -m 15 -H "Authorization: token $tok" https://api.github.com/user | "$PY" -c 'import json,sys;print(json.load(sys.stdin).get("login",""))' 2>/dev/null)"
-    [ "$me" = "$login" ] || { echo "[ERROR] token belongs to '${me:-?}', not '$login' (or network/proxy problem)"; exit 1; }
+    me="$("${CURL[@]}" -H "Authorization: token $tok" https://api.github.com/user | "$PY" -c 'import json,sys;print(json.load(sys.stdin).get("login",""))' 2>/dev/null)"
+    if [ -z "$me" ]; then echo "[ERROR] GitHub API unreachable (proxy: ${GP:-none}) - run: bash proxy.sh  then retry"; exit 1; fi
+    [ "$me" = "$login" ] || { echo "[ERROR] token belongs to '$me', not '$login'"; exit 1; }
     printf '%s' "$tok" > "$ACC_DIR/$login"; chmod 600 "$ACC_DIR/$login"; echo "OK: token stored for $login  ($ACC_DIR/$login)"
     echo "   push access to $OWNER_REPO: $(test_account "$login")"; exit 0;;
   --remove) rm -f "$ACC_DIR/${2:?--remove <login>}"; echo "OK: removed"; exit 0;;
