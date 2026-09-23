@@ -1,9 +1,9 @@
 {
-  "round": 6,
-  "arena_state": "accepted",
-  "local_state": "passed",
-  "arena_updated": "2026-09-23 07:41:03",
-  "local_updated": "2026-09-23 15:36:48",
-  "host": "LAPTOP-R77M5D6M",
-  "note": "round 6: job exited 0 but produced nothing; re-dispatching with log capture"
+  "round": 7,
+  "arena_state": "awaiting_check",
+  "local_state": "pending",
+  "arena_updated": "2026-09-23 07:41:07",
+  "local_updated": null,
+  "host": "",
+  "note": "round 7: 重跑家族层面分析 (带完整日志回传)"
 }
