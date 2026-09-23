@@ -1,0 +1,7 @@
+set	n	pct_of_group	pct_of_union
+AD_total	4276575	100.00	70.30
+NC_total	2197149	100.00	36.12
+shared	390206	9.12 (of AD) / 17.76 (of NC)	6.41
+AD_specific	3886369	90.88	63.88
+NC_specific	1806943	82.24	29.70
+Jaccard(AD,NC)	0.0641		
