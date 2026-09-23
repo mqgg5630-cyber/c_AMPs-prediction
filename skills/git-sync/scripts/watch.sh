@@ -84,6 +84,14 @@ case "${1:-}" in
     [ -f "$STATE_DIR/state.json" ] && echo "state     : $(cat "$STATE_DIR/state.json")"
     echo "hands-free: $HANDS_FREE (pull=$AUTO_PULL push=$AUTO_PUSH)"; echo "log tail  : $LOG"; tail -5 "$LOG" 2>/dev/null | sed 's/^/   /';;
   --test) poll;;
+  --kill)
+    # stop a running job (used when the agent's plan changes): kill the job tree, release the lock,
+    # and record a cancelled verdict so the arena side stops waiting.
+    pgrep -f "code/job.sh|job_watch.py|group_specific|mmseqs" | while read -r pid; do kill -TERM -- -"$(ps -o pgid= -p "$pid" | tr -d ' ')" 2>/dev/null || kill -TERM "$pid" 2>/dev/null; done
+    sleep 3; pgrep -f "code/job.sh|job_watch.py|mmseqs" | xargs -r kill -9 2>/dev/null
+    rm -f "$STATE_DIR/lock"
+    ( cd "$REPO" && git fetch -q origin 2>/dev/null; msg="check: round cancelled by agent (local job stopped)";       printf '%s\n' "$msg" > results/status/cancel.txt;       git add -f results/status/cancel.txt >/dev/null 2>&1; git commit -qm "$msg" >/dev/null 2>&1;       for i in 1 2 3; do git pull -q --rebase >/dev/null 2>&1; git push -q >/dev/null 2>&1 && break; sleep 2; done )
+    echo "OK: running job killed, lock released, cancellation pushed";;
   --once)
     # cron has a bare env: reuse the proxy git is configured with so jobs can download
     gp="$(git config --global http.proxy 2>/dev/null || true)"
