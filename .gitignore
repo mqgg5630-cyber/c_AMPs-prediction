@@ -140,3 +140,4 @@ results/group_specific_family/work/
 results/group_specific_family/family_representatives.tsv
 results/group_specific_family/*/family_enrichment.tsv
 results/group_specific_family/*/family_stage_trend.tsv
+tools/

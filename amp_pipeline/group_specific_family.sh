@@ -18,15 +18,28 @@ SORT="sort -S ${SORT_MEM:-30%} --parallel=$THREADS -T ${TMPDIR:-$W}"
 PY="$(command -v python3 || command -v python)"
 log(){ echo "[$(date '+%F %T')] $*"; }
 
-# ---- mmseqs: 找不到就装到 conda env
+# ---- mmseqs: PATH -> 本地静态二进制 (自动下载) -> conda -> 纯 python 兜底
 MM="$(command -v mmseqs || true)"
+BIN="$PROJECT_DIR/tools/mmseqs/bin/mmseqs"
+[ -z "$MM" ] && [ -x "$BIN" ] && MM="$BIN"
+if [ -z "$MM" ]; then
+  mkdir -p "$PROJECT_DIR/tools"; arch=avx2; grep -q avx2 /proc/cpuinfo || arch=sse41
+  for u in "https://mmseqs.com/latest/mmseqs-linux-$arch.tar.gz" "https://github.com/soedinglab/MMseqs2/releases/latest/download/mmseqs-linux-$arch.tar.gz"; do
+    log "下载 mmseqs2 静态二进制: $u"
+    if curl -sL -m 600 --retry 2 -o "$PROJECT_DIR/tools/mmseqs.tgz" "$u" && tar xzf "$PROJECT_DIR/tools/mmseqs.tgz" -C "$PROJECT_DIR/tools" 2>/dev/null && [ -x "$BIN" ]; then MM="$BIN"; break; fi
+  done
+  rm -f "$PROJECT_DIR/tools/mmseqs.tgz"
+fi
 if [ -z "$MM" ]; then
   CB="$(conda info --base 2>/dev/null | grep -m1 '^/' || echo "$HOME/miniconda3")"
-  [ -x "$CB/envs/mmseqs2/bin/mmseqs" ] || { log "安装 mmseqs2 (conda, bioconda) ..."; "$CB/bin/conda" create -y -q -n mmseqs2 -c conda-forge -c bioconda mmseqs2 >/dev/null 2>&1 || "$CB/bin/conda" create -y -n mmseqs2 -c conda-forge -c bioconda mmseqs2; }
-  MM="$CB/envs/mmseqs2/bin/mmseqs"
-  [ -x "$MM" ] || { echo "[错误] mmseqs2 安装失败 ($MM 不存在). 手动: conda create -n mmseqs2 -c conda-forge -c bioconda mmseqs2"; exit 1; }
+  [ -x "$CB/envs/mmseqs2/bin/mmseqs" ] || "$CB/bin/conda" create -y -q -n mmseqs2 -c conda-forge -c bioconda mmseqs2 >/dev/null 2>&1 || true
+  [ -x "$CB/envs/mmseqs2/bin/mmseqs" ] && MM="$CB/envs/mmseqs2/bin/mmseqs"
 fi
-log "mmseqs: $MM ($($MM version 2>/dev/null | head -1))"
+if [ -z "$MM" ]; then
+  log "[警告] 无法获得 mmseqs2 (无网络?). 使用纯 python 贪心聚类兜底 (k-mer 预筛 + 全局比对 identity>=$MIN_ID), 较慢但结果可用"
+  MM="$SCRIPT_DIR/py_cluster.py"; PYFALLBACK=1
+fi
+log "mmseqs: $MM ($("$MM" version 2>/dev/null | head -1 || echo python-fallback))"
 
 # ---- 1. 三票 AMP: seq \t name(首个) \t 组列表 ; 同时解析 MAG id
 # sORF name 形如 sORF_<MAG>_<n> / <MAG>__bin.X_k141_... ; 用可配置的正则 MAG_RE 抽取, 默认取去掉末尾 _数字 后的前缀
@@ -71,7 +84,8 @@ if [ ! -s "$W/clu_cluster.tsv" ]; then
   cut -f1 "$W/all.tsv" | uniq | awk '{print ">u"NR"\n"$0}' > "$W/uniq.fa"
   cut -f1 "$W/all.tsv" | uniq | awk '{print "u"NR"\t"$0}' > "$W/uniq_id2seq.tsv"
   N=$(wc -l < "$W/uniq_id2seq.tsv"); log "[2] mmseqs easy-cluster $N 条 (min-seq-id $MIN_ID, cov $COV, 双向) ..."
-  "$MM" easy-cluster "$W/uniq.fa" "$W/clu" "$W/mmtmp" --min-seq-id "$MIN_ID" -c "$COV" --cov-mode 0 --threads "$THREADS" -v 1 >/dev/null
+  if [ -n "${PYFALLBACK:-}" ]; then "$PY" "$MM" "$W/uniq.fa" "$W/clu_cluster.tsv" "$MIN_ID" "$COV" "$THREADS"
+  else "$MM" easy-cluster "$W/uniq.fa" "$W/clu" "$W/mmtmp" --min-seq-id "$MIN_ID" -c "$COV" --cov-mode 0 --threads "$THREADS" -v 1 >/dev/null; fi
   rm -rf "$W/mmtmp"
 fi
 NF=$(cut -f1 "$W/clu_cluster.tsv" | $SORT -u | wc -l); NU=$(wc -l < "$W/uniq_id2seq.tsv")

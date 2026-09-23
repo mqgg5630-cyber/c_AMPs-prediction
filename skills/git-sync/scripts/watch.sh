@@ -84,6 +84,10 @@ case "${1:-}" in
     [ -f "$STATE_DIR/state.json" ] && echo "state     : $(cat "$STATE_DIR/state.json")"
     echo "hands-free: $HANDS_FREE (pull=$AUTO_PULL push=$AUTO_PUSH)"; echo "log tail  : $LOG"; tail -5 "$LOG" 2>/dev/null | sed 's/^/   /';;
   --test) poll;;
-  --once) exec 9>"$STATE_DIR/lock"; flock -n 9 || { log "lock held - skipping"; exit 0; }; poll >/dev/null 2>&1;;
+  --once)
+    # cron has a bare env: reuse the proxy git is configured with so jobs can download
+    gp="$(git config --global http.proxy 2>/dev/null || true)"
+    if [ -n "$gp" ]; then export http_proxy="$gp" https_proxy="$gp" HTTP_PROXY="$gp" HTTPS_PROXY="$gp" ALL_PROXY="$gp"; export no_proxy="localhost,127.0.0.1,::1"; fi
+    exec 9>"$STATE_DIR/lock"; flock -n 9 || { log "lock held - skipping"; exit 0; }; poll >/dev/null 2>&1;;
   *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//';;
 esac
