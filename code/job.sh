@@ -8,6 +8,8 @@ export SORT_MEM=30% TMPDIR=/home/w24e/0amp/tmp THREADS=6 SAMPLE=200000 FULL_ID=0
 mkdir -p "$TMPDIR"
 echo "== mmseqs: $(command -v mmseqs || echo "$PWD/tools/mmseqs/bin/mmseqs")"
 echo "== 复用索引: $(ls -la results/group_specific_family/work/all.tsv 2>/dev/null || echo 无)"
+# round 9 的 A(采样切碎 FASTA)/B(max-seqs 截断)产物无效, round 10 重跑 A/B; work/ 索引保留复用
+rm -f results/group_specific_family2/compression_curve.tsv results/group_specific_family2/nn_identity_dist.tsv results/group_specific_family2/nn_identity_summary.tsv
 set -x
 bash amp_pipeline/group_specific_analysis2.sh "$RES" results/group_specific_family2
 rc=$?; set +x

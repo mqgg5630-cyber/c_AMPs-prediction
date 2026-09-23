@@ -46,11 +46,11 @@ NU=$(wc -l < "$W/uniq_id2seq.tsv"); log "  唯一三票 AMP: $NU"
 # ---- A. 压缩比曲线（子样本）
 if [ ! -s "$OUT/compression_curve.tsv" ]; then
   K=$(( NU / SAMPLE + 1 )); log "[A] 压缩比曲线: 每 $K 条取 1 条 (约 $((NU/K)) 条)"
-  awk -v k=$K 'NR%k==1' "$W/uniq.fa" > "$W/sub.fa"
+  awk -v k=$K '/^>/{n++} n%k==1' "$W/uniq.fa" > "$W/sub.fa"   # 按记录采样(每K条取1条), 不能按行切
   printf 'min_seq_id\tsensitivity\tcov\tclusters\tseqs\tcompression\n' > "$OUT/compression_curve.tsv"
   for id in 0.99 0.9 0.8 0.7 0.6; do
     rm -rf "$W/sub_$id"; "$MM" easy-cluster "$W/sub.fa" "$W/sub_$id" "$W/subtmp_$id" --min-seq-id "$id" -c 0.8 --cov-mode 0 -s "$SENS" --threads "$THREADS" -v 0 >/dev/null 2>&1
-    c=$(cut -f1 "$W/sub_${id}_cluster.tsv" 2>/dev/null | $SORT -u | wc -l); s=$(awk 'END{print NR/2}' "$W/sub.fa")
+    c=$(cut -f1 "$W/sub_${id}_cluster.tsv" 2>/dev/null | $SORT -u | wc -l); s=$(grep -c '^>' "$W/sub.fa")
     awk -v i="$id" -v c="$c" -v s="$s" 'BEGIN{printf "%s\t%s\t0.8\t%d\t%d\t%.2fx\n", i, "'"$SENS"'", c, s, s/c}' >> "$OUT/compression_curve.tsv"
     log "    id=$id -> $c 家族 / $s 序列"
     rm -rf "$W/subtmp_$id"
@@ -67,13 +67,16 @@ if [ ! -s "$OUT/nn_identity_summary.tsv" ]; then
   for s in onlyAD onlyNC both; do awk 'NR%30==1' "$W/$s.txt" | head -20000 | awk '{print ">"NR"\n"$0}' > "$W/$s.sample.fa"; log "    $s 采样 $(grep -c '^>' "$W/$s.sample.fa")"; done
   : > "$OUT/nn_identity_dist.tsv"; printf 'query_set\ttarget_set\tfident\n' > "$OUT/nn_identity_dist.tsv"
   for q in onlyAD onlyNC both; do for t in onlyAD onlyNC both; do
-      { "$MM" easy-search "$W/$q.sample.fa" "$W/$t.sample.fa" "$W/nn_${q}_${t}.m8" "$W/nn_tmp" --min-seq-id 0.5 -s "$SENS" -c 0.5 --cov-mode 0 --max-seqs 1 --format-output "query,target,fident" --threads "$THREADS" -v 0 >/dev/null 2>&1 || true; }
-      { awk -v q="$q" -v t="$t" 'BEGIN{OFS="\t"} NF>=3{print q,t,$3}' "$W/nn_${q}_${t}.m8" >> "$OUT/nn_identity_dist.tsv"; } || true
+      { "$MM" easy-search "$W/$q.sample.fa" "$W/$t.sample.fa" "$W/nn_${q}_${t}.m8" "$W/nn_tmp" --min-seq-id 0.5 -s "$SENS" -c 0.5 --cov-mode 0 --max-seqs 300 --format-output "query,target,fident" --threads "$THREADS" -v 0 >/dev/null 2>&1 || true; }
+      { awk -v q="$q" -v t="$t" 'BEGIN{OFS="\t"} NF>=3 && !seen[$1]++{print q,t,$3}' "$W/nn_${q}_${t}.m8" >> "$OUT/nn_identity_dist.tsv"; } || true
       rm -rf "$W/nn_tmp"
     done; done
-  "$PY" - "$OUT/nn_identity_dist.tsv" "$OUT/nn_identity_summary.tsv" <<'PY'
+  "$PY" - "$OUT/nn_identity_dist.tsv" "$OUT/nn_identity_summary.tsv" "$W/onlyAD.sample.fa" "$W/onlyNC.sample.fa" "$W/both.sample.fa" <<'PY'
 import sys, collections, statistics as st
 inp, out = sys.argv[1], sys.argv[2]
+nq = {}
+for tag, fa in (("onlyAD", sys.argv[3]), ("onlyNC", sys.argv[4]), ("both", sys.argv[5])):
+    nq[tag] = sum(1 for ln in open(fa) if ln.startswith(">"))
 d = collections.defaultdict(list)
 for i, ln in enumerate(open(inp)):
     if i == 0: continue
@@ -82,8 +85,8 @@ rows = ["query_set\ttarget_set\tn_with_hit\tn_query\tpct_with_hit(>=0.5)\tmedian
 with open(out, "w") as o:
     o.write(rows[0] + "\n")
     for (q, t), v in sorted(d.items()):
-        v.sort(); n = len(v)
-        o.write(f"{q}\t{t}\t{n}\t-\t-\t{v[n//2]:.3f}\t{v[int(n*0.9)]:.3f}\t{100*sum(1 for x in v if x>=0.9)/n:.1f}\n")
+        v.sort(); n = len(v); nqq = nq.get(q, 0)
+        o.write(f"{q}\t{t}\t{n}\t{nqq}\t{100*n/nqq if nqq else 0:.1f}\t{v[n//2]:.3f}\t{v[int(n*0.9)]:.3f}\t{100*sum(1 for x in v if x>=0.9)/n:.1f}\n")
 print(open(out).read())
 PY
 fi
@@ -91,7 +94,7 @@ fi
 # ---- C. 正式阈值下的家族层面重叠
 if [ ! -s "$OUT/family_overlap.tsv" ]; then
   log "[C] 家族层面重叠 (FULL_ID=$FULL_ID) ..."
-  [ -s "$W/clu_cluster.tsv" ] || { log "  聚类 $NU 条 ..."; "$MM" easy-cluster "$W/uniq.fa" "$W/clu" "$W/mmtmp" --min-seq-id "$FULL_ID" -c 0.8 --cov-mode 0 -s "$SENS" --threads "$THREADS" -v 1 >/dev/null; rm -rf "$W/mmtmp"; }
+  [ -s "$W/clu_cluster.tsv" ] || { log "  聚类 $NU 条 ..."; rm -rf "$W/mmtmp"; "$MM" easy-cluster "$W/uniq.fa" "$W/clu" "$W/mmtmp" --min-seq-id "$FULL_ID" -c 0.8 --cov-mode 0 -s "$SENS" --threads "$THREADS" -v 1 2>&1 | grep -v "^$" ; rm -rf "$W/mmtmp"; }
   NF=$(cut -f1 "$W/clu_cluster.tsv" | $SORT -u | wc -l); log "  家族数 $NF (唯一序列 $NU, 压缩比 $(awk -v a=$NU -v b=$NF 'BEGIN{printf "%.2f",a/b}')x)"
   $SORT -k2,2 "$W/clu_cluster.tsv" | join -t $'\t' -1 2 -2 1 -o 1.1,2.2 - <($SORT -k1,1 "$W/uniq_id2seq.tsv") | awk -F'\t' '{print $2"\t"$1}' | $SORT -k1,1 > "$W/seq2fam.tsv"
   $SORT -k1,1 "$W/all.tsv" | join -t $'\t' - "$W/seq2fam.tsv" | awk -F'\t' '{print $5"\t"$3}' | $SORT -u > "$W/fam_group.tsv"    # fam group

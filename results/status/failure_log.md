@@ -34,3 +34,23 @@ D 家族层面特征对比；E 服务器文件清单。不再做无 MAG 信息�
 
 job 日志只落在本机、没推回仓库，Arena 侧无法判断。已修复：每轮清空旧 `job_*.log`、
 `local_check.sh` 打印日志尾、job_watch 每 15 min 回传进度 + 日志。
+
+## round 9（2026-09-23）：v2 的 A/B 与 watchdog 有 bug，远程叫停后重开
+
+**发现方式**：watchdog 第一次进度回传（15 min）即暴露问题 —— 进度回传机制本身立功。
+
+**bug 1（A 采样切碎 FASTA）**：`awk 'NR%k==1' uniq.fa` 按**行**采样，把双行 FASTA
+切成 header/序列错位的碎片。证据：子样本 197900“序列”聚出 395801 个家族
+（家族数 = 行数 ≈ 序列数 2 倍）。修：按记录采样 `/^>/{n++} n%k==1`，序列数用 `grep -c '^>'`。
+
+**bug 2（B max-seqs 截断 self-hit）**：`--max-seqs 1` 在 prefilter 阶段就截断，
+低复杂度短肽的海量 k-mer 命中把 self 淹没。证据：self 搜索 onlyAD→onlyAD 仅 67% 命中、
+both→both 仅 40%（越短/越 R-rich 的集合漏检越多）。修：`--max-seqs 300` + 每 query 取第一行（best）。
+
+**bug 3（watchdog CPU 负值 + 单次误杀）**：树总 CPU 时间在子进程退出时会下降，
+`dcpu` 变负（回传里 -803%、-1661%）；stall 条件“单次 cpu<5%”遇上 C 聚类全程无日志
+（mmseqs 输出被 `>/dev/null` 丢掉），17:35 后随时可能误杀。修：`dcpu=max(0,…)` +
+连续 3 次 idle 才杀 + C 的 mmseqs `-v 1` 进度进日志（长步骤必须有心跳）+ 聚类前清 tmpdir。
+
+**决策**：不停等误杀，主动远程叫停（`cancel_request.txt`，验证 remote_cancel_check 实战），
+修完重开 round 10（C 只损失十几分钟；job.sh 开头删 round 9 的错误 A/B 产物，work/ 索引保留）。

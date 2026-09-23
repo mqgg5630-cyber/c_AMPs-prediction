@@ -62,13 +62,13 @@ def main():
     open(prog, "a").write(f"# started {time.strftime('%F %T')} cmd={a.cmd} stall_min={a.stall_min} max_h={a.max_hours}\n")
     with open(a.log, "wb") as lf:
         p = subprocess.Popen(a.cmd, shell=True, cwd=repo, stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
-        t0 = time.time(); last_cpu, last_sz, still = tree_cpu(p.pid)[0], 0, 0; last_push = t0; killed = 0
+        t0 = time.time(); last_cpu, last_sz, still = tree_cpu(p.pid)[0], 0, 0; last_push = t0; killed = 0; idle_streak = 0
         print(f"[watch] pid={p.pid} log={a.log}", flush=True)
         while p.poll() is None:
             time.sleep(30)
             now = time.time(); el = now - t0
             sz = os.path.getsize(a.log); age = now - os.path.getmtime(a.log)
-            cpu, nproc_ = tree_cpu(p.pid); dcpu = (cpu - last_cpu) / 30 * 100; last_cpu = cpu
+            cpu, nproc_ = tree_cpu(p.pid); dcpu = max(0.0, (cpu - last_cpu) / 30 * 100); last_cpu = cpu  # tree total can DROP when children exit -> clamp
             grew = sz > last_sz; last_sz = sz
             still = 0 if grew else still + 1
             line = (f"{time.strftime('%F %T')}\telapsed={el/60:.1f}min\tlog={sz}B\tlog_age={age/60:.1f}min\t"
@@ -78,8 +78,9 @@ def main():
             if now - last_push > a.push_every_min * 60:
                 ok = git_push_progress(repo, os.path.relpath(prog, repo), os.path.relpath(a.log, repo), f"progress: job running ({el/60:.0f} min)")
                 print(f"[watch] progress push: {'ok' if ok else 'skipped'}", flush=True); last_push = now
-            if age / 60 >= a.stall_min and dcpu < a.cpu_idle:
-                print(f"[watch] STALLED: log unchanged {age/60:.0f} min with cpu {dcpu:.0f}% -> killing", flush=True)
+            idle_streak = idle_streak + 1 if dcpu < a.cpu_idle else 0
+            if age / 60 >= a.stall_min and idle_streak >= 3:
+                print(f"[watch] STALLED: log unchanged {age/60:.0f} min with cpu {dcpu:.0f}% x{idle_streak} -> killing", flush=True)
                 killed = 90; break
             if el / 3600 >= a.max_hours:
                 print(f"[watch] TIMEOUT: {el/3600:.1f} h >= {a.max_hours} h -> killing", flush=True)
