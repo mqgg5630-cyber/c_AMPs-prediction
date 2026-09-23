@@ -358,7 +358,8 @@ Windows 用 `.ps1`，**Linux / WSL 用同名 `.sh`**，协议完全相同（同�
 |---|---|---|
 | `bash bootstrap.sh --auto` | `.\bootstrap.ps1 -Auto` | 身份/分支/首拉 + 认证检查 + **cron 值守**（每 2 分钟）+ 硬件报告 |
 | `bash sync.sh` / `bash push.sh "msg"` | `sync.ps1` / `push.ps1` | 拉 / 推（拒绝 main；静默，无凭据 exit 4） |
-| `bash auth.sh [--gh-login \| --account X]` | `auth.ps1` | 免交互推送并实跑证明 |
+| `bash auth.sh [--add X \| --accounts \| --account X \| --unpin]` | `auth.ps1 -Accounts/-Account/-Unpin` | 多账号：令牌存 `~/.config/git-sync/accounts/`，`--account` 只钉当前克隆 |
+| `bash proxy.sh [--install]` | (无) | WSL2 代理一键：宿主 IP 每次重启会变，`--install` 写入 ~/.bashrc 自动刷新 |
 | `bash watch.sh --register [N] / --status / --test / --unregister` | `watch.ps1` | cron 值守；状态在 `~/.local/state/git-sync/<repo>/` |
 | `bash doctor.sh [--fix]` / `bash hardware.sh [--deep]` | `doctor.ps1` / `hardware.ps1` | 体检 / 硬件报告 |
 | `code/local_check.sh` | `code/local_check.ps1` | 值守实际执行的检查（配置键 `check_cmd_linux`） |

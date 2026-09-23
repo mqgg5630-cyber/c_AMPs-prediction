@@ -127,7 +127,7 @@ for f in sync push upload download pack doctor bootstrap pr hardware watch auth 
     fi
 done
 # 3b. Linux twins (.sh) - same rule when the skill ships them
-for f in sync push auth watch doctor hardware bootstrap; do
+for f in sync push auth watch doctor hardware bootstrap proxy; do
     if [ -f "skills/git-sync/scripts/$f.sh" ]; then
         if [ ! -f "$f.sh" ]; then
             echo "[FAIL] $f.sh is missing at the repo root (the skill ships it)"; drift=1

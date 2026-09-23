@@ -7,6 +7,7 @@ _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$_d/gitsync-lib.sh" ]; then . "$_d/gitsync-lib.sh"; else . "$_d/skills/git-sync/scripts/gitsync-lib.sh"; fi
 SCRIPTS="$REPO/skills/git-sync/scripts"
 AUTO=0; [ "${1:-}" = "--auto" ] && AUTO=1
+grep -qi microsoft /proc/version 2>/dev/null && bash "$SCRIPTS/proxy.sh" --install
 git config user.name  >/dev/null || git config user.name  "$(whoami)@$(hostname)"
 git config user.email >/dev/null || git config user.email "$(whoami)@$(hostname).local"
 git config pull.ff only; git config core.autocrlf input
