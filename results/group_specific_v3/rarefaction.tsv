@@ -1,0 +1,3 @@
+level	AD_unique	NC_unique	shared	union	jaccard	AD_only_frac	NC_only_frac
+uniq	4276575	2197149	390206	6083518	0.0641	0.9088	0.8224
+sub	4276575	2197149	390206	6083518	0.0641	0.9088	0.8224
