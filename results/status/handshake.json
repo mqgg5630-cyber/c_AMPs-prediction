@@ -1,9 +1,9 @@
 {
-  "round": 9,
+  "round": 10,
   "arena_state": "awaiting_check",
-  "local_state": "failed",
-  "arena_updated": "2026-09-23 09:01:30",
-  "local_updated": "2026-09-23 17:22:04",
-  "host": "LAPTOP-R77M5D6M",
-  "note": "round 9: v2 分析 (压缩比曲线+最近邻同一性+家族重叠, 复用v1索引, 看门狗+进度回传)"
+  "local_state": "pending",
+  "arena_updated": "2026-09-23 09:34:46",
+  "local_updated": null,
+  "host": "",
+  "note": "round 10: v2 重跑 (A按记录采样+B max-seqs300+watchdog钳位/CPU三振+C日志心跳, 复用索引)"
 }
