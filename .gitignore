@@ -127,3 +127,5 @@ lstm_proba.tsv
 bert_proba.tsv
 input_formatted_300.txt
 Models/bert-base-uncased/
+*.log
+results/jobs/*.log
