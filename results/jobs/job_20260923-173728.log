@@ -1,0 +1,28 @@
+== mmseqs: /home/w24e/0amp/att-lstm-bert/tools/mmseqs/bin/mmseqs
+== 复用索引: -rw-rw-r-- 2 w24e w24e 1906218289 Sep 23 16:02 results/group_specific_family/work/all.tsv
++ bash amp_pipeline/group_specific_analysis2.sh /home/w24e/c_AMPs-prediction/amp_results results/group_specific_family2
+[2026-09-23 17:37:28] mmseqs: /home/w24e/0amp/att-lstm-bert/tools/mmseqs/bin/mmseqs
+[2026-09-23 17:37:28]   唯一三票 AMP: 12665622
+[2026-09-23 17:37:28] [A] 压缩比曲线: 每 64 条取 1 条 (约 197900 条)
+[2026-09-23 17:38:27]     id=0.99 -> 197894 家族 / 197901 序列
+[2026-09-23 17:39:11]     id=0.9 -> 197849 家族 / 197901 序列
+[2026-09-23 17:39:55]     id=0.8 -> 197751 家族 / 197901 序列
+[2026-09-23 17:40:39]     id=0.7 -> 197667 家族 / 197901 序列
+[2026-09-23 17:41:25]     id=0.6 -> 197583 家族 / 197901 序列
+[2026-09-23 17:41:25] [B] 最近邻同一性分析 ...
+[2026-09-23 17:45:14]     onlyAD 采样 20000
+[2026-09-23 17:45:14]     onlyNC 采样 20000
+[2026-09-23 17:45:15]     both 采样 13007
+query_set	target_set	n_with_hit	n_query	pct_with_hit(>=0.5)	median_fident	p90_fident	pct_ident>=0.9
+both	both	5197	13007	40.0	1.000	1.000	100.0
+both	onlyAD	23	13007	0.2	0.826	0.956	34.8
+both	onlyNC	14	13007	0.1	0.750	0.954	21.4
+onlyAD	both	23	20000	0.1	0.837	0.956	34.8
+onlyAD	onlyAD	13388	20000	66.9	1.000	1.000	100.0
+onlyAD	onlyNC	54	20000	0.3	0.800	0.944	20.4
+onlyNC	both	20	20000	0.1	0.750	0.954	20.0
+onlyNC	onlyAD	53	20000	0.3	0.800	0.944	17.0
+onlyNC	onlyNC	12556	20000	62.8	1.000	1.000	100.0
+
+[2026-09-23 17:45:48] [C] 家族层面重叠 (FULL_ID=0.7) ...
+[2026-09-23 17:45:48]   聚类 12665622 条 ...
