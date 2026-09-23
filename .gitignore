@@ -137,3 +137,7 @@ results/group_specific/*/core5.tsv
 results/group_specific/*/late_only_*.tsv
 results/group_specific/*/early_only_*.tsv
 results/group_specific/sets/
+results/group_specific_family/work/
+results/group_specific_family/family_representatives.tsv
+results/group_specific_family/*/family_enrichment.tsv
+results/group_specific_family/*/family_stage_trend.tsv

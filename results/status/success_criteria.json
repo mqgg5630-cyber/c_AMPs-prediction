@@ -1,10 +1,6 @@
 {
-  "description": "组特异性 AMP 集合分析在本机跑完: 四个队列的汇总表与特征表存在且非空",
-  "require_files": ["results/group_specific/SUMMARY.md",
-    "results/group_specific/Cohort2_Matched265_NCvsAD/set_summary.tsv", "results/group_specific/Cohort4_Full476_NCvsAD/set_summary.tsv",
-    "results/group_specific/Cohort1_Matched265_5Stage/pattern_counts.tsv", "results/group_specific/Cohort3_Full476_5Stage/pattern_counts.tsv",
-    "results/group_specific/Cohort2_Matched265_NCvsAD/features.tsv", "results/group_specific/Cohort1_Matched265_5Stage/features.tsv",
-    "results/group_specific/Cohort2_Matched265_NCvsAD/top200_AD_specific.tsv"],
-  "require_contains": {"results/group_specific/SUMMARY.md": "Jaccard", "results/group_specific/Cohort1_Matched265_5Stage/stage_summary.tsv": "AD"},
-  "min_bytes": {"results/group_specific/SUMMARY.md": 2000}
+  "description": "家族层面组特异性分析在本机完成",
+  "require_files": ["results/group_specific_family/SUMMARY.md", "results/group_specific_family/Cohort2_Matched265_NCvsAD/family_set_summary.tsv", "results/group_specific_family/Cohort1_Matched265_5Stage/family_stage_summary.tsv", "results/group_specific_family/mags_per_group.tsv"],
+  "require_contains": {"results/group_specific_family/SUMMARY.md": "BH_q<0.05"},
+  "min_bytes": {"results/group_specific_family/SUMMARY.md": 1500}
 }
