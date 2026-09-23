@@ -141,3 +141,8 @@ results/group_specific_family/family_representatives.tsv
 results/group_specific_family/*/family_enrichment.tsv
 results/group_specific_family/*/family_stage_trend.tsv
 tools/
+results/group_specific_family2/work/
+results/group_specific_family2/*.fa
+results/group_specific_family2/families_*.txt
+results/group_specific_family2/core14_families.txt
+results/group_specific_family2/nn_identity_dist.tsv
