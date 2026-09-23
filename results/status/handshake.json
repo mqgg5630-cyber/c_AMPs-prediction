@@ -1,9 +1,9 @@
 {
   "round": 4,
   "arena_state": "awaiting_check",
-  "local_state": "pending",
+  "local_state": "passed",
   "arena_updated": "2026-09-23 06:45:44",
-  "local_updated": null,
-  "host": "",
+  "local_updated": "2026-09-23 14:47:38",
+  "host": "LAPTOP-R77M5D6M",
   "note": "round 4: 交付文档已推送; 本机确认 deliverable/*.md *.docx 存在并打印绝对路径"
 }
