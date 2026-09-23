@@ -92,7 +92,7 @@ PY
   ok=0; for try in 1 2 3; do
     git commit -q -m "check: round $round $verdict" 2>/dev/null || true
     if git push -q "$REMOTE" "$BRANCH" 2>>"$LOG"; then ok=1; break; fi
-    git pull -q --rebase "$REMOTE" "$BRANCH" 2>>"$LOG" || true; sleep 3
+    git -c rebase.autoStash=true pull -q --rebase "$REMOTE" "$BRANCH" 2>>"$LOG" || { git rebase --abort 2>/dev/null || true; }; sleep 3
   done
   if [ $ok = 1 ]; then say "round $round checked ($verdict) - verdict pushed"; set_state last_action=push last_push=ok last_round="$round" last_verdict="$verdict"
   else say "round $round checked ($verdict) but push FAILED - run: bash auth.sh"; set_state last_action=push last_push=failed last_round="$round"; return 1; fi

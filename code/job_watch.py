@@ -38,7 +38,7 @@ def git_push_progress(repo, prog, log, msg):
         r = subprocess.run(["git", "-C", repo, "commit", "-qm", msg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if r.returncode != 0: return False
         for _ in range(3):
-            subprocess.run(["git", "-C", repo, "pull", "-q", "--rebase"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["git", "-C", repo, "-c", "rebase.autoStash=true", "pull", "-q", "--rebase"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if subprocess.run(["git", "-C", repo, "push", "-q"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
                 return True
             time.sleep(3)

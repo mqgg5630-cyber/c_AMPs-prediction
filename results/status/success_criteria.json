@@ -1,12 +1,10 @@
 {
-  "description": "组特异性 AMP 分析 v2 (压缩比曲线 + 最近邻同一性 + 家族层面重叠) 在本机跑完",
-  "require_files": ["results/group_specific_family2/SUMMARY.md",
-    "results/group_specific_family2/compression_curve.tsv",
-    "results/group_specific_family2/nn_identity_summary.tsv",
-    "results/group_specific_family2/family_overlap.tsv",
-    "results/group_specific_family2/family_occurrence_hist.tsv",
-    "results/group_specific_family2/NEXT_STEPS_SERVER_FILES.md",
-    "results/group_specific_family2/features_family.tsv"],
-  "require_contains": {"results/group_specific_family2/SUMMARY.md": "压缩比曲线", "results/group_specific_family2/compression_curve.tsv": "0.7"},
-  "min_bytes": {"results/group_specific_family2/SUMMARY.md": 800}
+  "description": "组特异性 AMP 分析 v3 (精确匹配层面: 跨队列一致性 + 深度校正 + 长度分层 + k-mer 富集) 在本机跑完",
+  "require_files": ["results/group_specific_v3/SUMMARY.md",
+    "results/group_specific_v3/cross_cohort.tsv",
+    "results/group_specific_v3/rarefaction.tsv",
+    "results/group_specific_v3/length_strata.tsv",
+    "results/group_specific_v3/kmer_enrichment.tsv"],
+  "require_contains": {"results/group_specific_v3/SUMMARY.md": "跨队列一致性", "results/group_specific_v3/cross_cohort.tsv": "ADonly"},
+  "min_bytes": {"results/group_specific_v3/SUMMARY.md": 800}
 }

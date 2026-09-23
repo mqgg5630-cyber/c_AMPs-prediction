@@ -146,3 +146,4 @@ results/group_specific_family2/*.fa
 results/group_specific_family2/families_*.txt
 results/group_specific_family2/core14_families.txt
 results/group_specific_family2/nn_identity_dist.tsv
+results/group_specific_v3/work/

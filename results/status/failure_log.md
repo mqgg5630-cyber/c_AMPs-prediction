@@ -54,3 +54,19 @@ both→both 仅 40%（越短/越 R-rich 的集合漏检越多）。修：`--max-
 
 **决策**：不停等误杀，主动远程叫停（`cancel_request.txt`，验证 remote_cancel_check 实战），
 修完重开 round 10（C 只损失十几分钟；job.sh 开头删 round 9 的错误 A/B 产物，work/ 索引保留）。
+
+## round 10（2026-09-23）：A/B 证伪 mmseqs 前提，主动叫停 C；sync 分叉第二次卡死
+
+**分析决策（正确）**：修好后的 A 显示 0.6 阈值压缩比仅 1.002x；B 在 max-seqs 300 后
+self 命中率与之前一个数字不变（40–67%），证实瓶颈是 mmseqs prefilter 对 11 aa 短肽全盲、
+而非 max-seqs 截断。C 全量聚类再跑 1–3h 只能重复证明工具失效，远程叫停，转向 v3
+（精确匹配层面，零 mmseqs）。C 实际只跑了约 15 min 就停，省 1–3h。
+
+**值守故障（连续第二次，根因已修）**：verdict commit 与远程 commit 交错 → 本机分叉 →
+`sync.sh pull --ff-only` 硬顶失败 → 每 tick `sync FAILED` 死循环，verdict 推不回来、
+新代码下不去。三处修复（已实测分叉自愈通过）：
+1. `sync.sh`：ff-only 失败自动 `pull --rebase`（仍失败才 abort 报错）；
+2. `watch.sh` poll 收尾 push 前 `git -c rebase.autoStash=true pull --rebase`（job 产物常驻
+   unstaged，之前 plain rebase 会被挡住而 push 失败）；
+3. `job_watch.py` progress push 同加 autoStash。
+教训：round 9 说“跑稳了再修”是错的 —— 同一个坑不能栽第二次；值守的自愈能力与分析脚本同等重要。
