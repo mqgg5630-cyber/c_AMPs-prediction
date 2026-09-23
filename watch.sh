@@ -29,6 +29,33 @@ PY
 }
 auto_pull() { [ "$AUTO_PULL" = true ] || return 0; bash "$SCRIPTS/sync.sh" >>"$LOG" 2>&1 && echo ok || echo fail; }
 auto_push() { [ "$AUTO_PUSH" = true ] || return 0; bash "$SCRIPTS/push.sh" --auto "$AUTO_PREFIX $(hostname) $(date '+%F %T')" >>"$LOG" 2>&1 && echo ok || echo fail; }
+_kill_tree() { local pid=$1 sig=$2 c; for c in $(pgrep -P "$pid" 2>/dev/null || true); do _kill_tree "$c" "$sig"; done; kill -"$sig" "$pid" 2>/dev/null || true; }
+kill_job_tree() {
+  # TERM then KILL the *job* trees only (job.sh / watchdog / pipeline / mmseqs).
+  # The watcher itself (watch.sh --once) and local_check.sh are never matched, so the
+  # running check wraps up on its own and pushes its verdict after the job dies.
+  local pid
+  for pid in $(pgrep -f 'code/job\.sh|job_watch\.py|group_specific|mmseqs' 2>/dev/null || true); do _kill_tree "$pid" TERM; done
+  sleep 3
+  for pid in $(pgrep -f 'code/job\.sh|job_watch\.py|mmseqs' 2>/dev/null || true); do _kill_tree "$pid" KILL; done
+}
+remote_cancel_check() {
+  # Let the ARENA side stop a WRONG job remotely: agent pushes results/status/cancel_request.txt,
+  # the next cron tick (<=2 min) kills the job even though the lock is held. Called on EVERY poll.
+  # Safe default: any fetch/read failure -> do nothing, never kill on network errors.
+  # Each distinct request (blob hash) is honoured once; the running check then wraps up and pushes failed.
+  cd "$REPO" 2>/dev/null || return 0
+  git fetch -q "$REMOTE" "$BRANCH" 2>/dev/null || return 0
+  local blob reason
+  blob="$(git rev-parse -q --verify "$REMOTE/$BRANCH:results/status/cancel_request.txt" 2>/dev/null || true)"
+  [ -n "$blob" ] || return 0
+  if [ -f "$STATE_DIR/cancel_handled" ] && [ "$(cat "$STATE_DIR/cancel_handled" 2>/dev/null)" = "$blob" ]; then return 0; fi
+  reason="$(git show "$REMOTE/$BRANCH:results/status/cancel_request.txt" 2>/dev/null | head -3 | tr '\n' ';' | cut -c1-200)"
+  log "REMOTE CANCEL ($blob): $reason -> stopping running job"
+  kill_job_tree
+  echo "$blob" > "$STATE_DIR/cancel_handled"
+  log "REMOTE CANCEL done - running check will wrap up and push its verdict"
+}
 
 poll() {
   date +%s > "$STATE_DIR/heartbeat"
@@ -41,6 +68,7 @@ poll() {
     set_state last_action=idle; return 0
   fi
   a="$(json_get "$hs" arena_state)"; l="$(json_get "$hs" local_state)"; round="$(json_get "$hs" round)"
+  remote_cancel_check
   if [ "$a" != awaiting_check ] || [ "$l" != pending ]; then
     if [ "$HANDS_FREE" = true ]; then say "idle (arena=$a local=$l) hands-free pull=$(auto_pull) push=$(auto_push)"; else say "idle (arena=$a local=$l)"; fi
     set_state last_action=idle last_note="arena=$a local=$l"; return 0
@@ -87,8 +115,7 @@ case "${1:-}" in
   --kill)
     # stop a running job (used when the agent's plan changes): kill the job tree, release the lock,
     # and record a cancelled verdict so the arena side stops waiting.
-    pgrep -f "code/job.sh|job_watch.py|group_specific|mmseqs" | while read -r pid; do kill -TERM -- -"$(ps -o pgid= -p "$pid" | tr -d ' ')" 2>/dev/null || kill -TERM "$pid" 2>/dev/null; done
-    sleep 3; pgrep -f "code/job.sh|job_watch.py|mmseqs" | xargs -r kill -9 2>/dev/null
+    kill_job_tree
     rm -f "$STATE_DIR/lock"
     ( cd "$REPO" && git fetch -q origin 2>/dev/null; msg="check: round cancelled by agent (local job stopped)";       printf '%s\n' "$msg" > results/status/cancel.txt;       git add -f results/status/cancel.txt >/dev/null 2>&1; git commit -qm "$msg" >/dev/null 2>&1;       for i in 1 2 3; do git pull -q --rebase >/dev/null 2>&1; git push -q >/dev/null 2>&1 && break; sleep 2; done )
     echo "OK: running job killed, lock released, cancellation pushed";;
@@ -96,6 +123,6 @@ case "${1:-}" in
     # cron has a bare env: reuse the proxy git is configured with so jobs can download
     gp="$(git config --global http.proxy 2>/dev/null || true)"
     if [ -n "$gp" ]; then export http_proxy="$gp" https_proxy="$gp" HTTP_PROXY="$gp" HTTPS_PROXY="$gp" ALL_PROXY="$gp"; export no_proxy="localhost,127.0.0.1,::1"; fi
-    exec 9>"$STATE_DIR/lock"; flock -n 9 || { log "lock held - skipping"; exit 0; }; poll >/dev/null 2>&1;;
+    exec 9>"$STATE_DIR/lock"; flock -n 9 || { remote_cancel_check >>"$LOG" 2>&1; log "lock held - skipping"; exit 0; }; poll >/dev/null 2>&1;;
   *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//';;
 esac

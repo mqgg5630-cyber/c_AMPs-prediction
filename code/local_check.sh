@@ -32,6 +32,7 @@ else echo "SKIP: test_gpu.sh (envs missing)"; fi
 #      output goes to results/jobs/. Non-zero exit fails the round. Delete the file to disable.
 if [ -f results/status/cancel_request.txt ]; then
   echo "== 6. job: CANCELLED (results/status/cancel_request.txt present) - skipping code/job.sh"
+  echo "--- cancel reason ---"; head -5 results/status/cancel_request.txt; fail=1
 elif [ -f code/job.sh ]; then
   echo "== 6. job: code/job.sh  (watchdog: stall>${JOB_STALL_MIN:-25}min, max ${JOB_MAX_HOURS:-6}h, progress pushed every ${JOB_PUSH_MIN:-15}min)"
   mkdir -p results/jobs; rm -f results/jobs/job_*.log

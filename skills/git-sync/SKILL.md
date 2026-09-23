@@ -355,3 +355,31 @@ bash skills/git-sync/scripts/agent-handsfree.sh \
 * 新会话的短句不变（`安装 ... 的 skills，与本地打通`），助手照样自己 clone + 安装，不要打开 arena.ai。
 
 * `doctor.ps1` 现在会打一行 `auth account`（本克隆 pin / gh active / 可选账号列表），`code/local_check.ps1` 也会把「本克隆 pin 到谁」写进每轮检查日志——agent 一眼就能分辨 403 的性质。
+
+## 13. Agent 远程决策闭环（v2.10.0）—— 不对就停，对的才跑
+
+三层保障，Agent 在 Arena 侧全程掌控本机任务，不需要用户敲命令：
+
+* **看门狗（`code/job_watch.py`）**：job 被它包裹运行，每 30 s 记录已运行时长、
+  日志大小/无更新时长、任务树 CPU%。**日志 25 min 不增长 且 CPU < 5% → 判卡死，
+  杀整棵任务树，exit 90**；超 6 h 杀，exit 91。每 15 min 把 `progress.tsv` + 日志尾 push，
+  Agent 在 Arena 侧能看到任务在推进。`local_check.sh` 里 `JOB_STALL_MIN/JOB_MAX_HOURS/JOB_PUSH_MIN` 可调。
+* **远程叫停（`watch.sh remote_cancel_check`）**：Agent 发现任务不对（设计错了、跑偏了），
+  只需 `echo "<原因>" > results/status/cancel_request.txt` 并 push。
+  **下一次 cron（≤2 min）即使 lock 被占着也会先检查这个文件**：有新的（按 blob hash 去重，
+  处理过的不再动手）→ 就地 `kill_job_tree`（只杀 job/watchdog/ pipeline/mmseqs，
+  不碰值守自身和 local_check.sh）→ 正在跑的 check 自动收尾并 push failed。
+  安全默认：fetch/读失败时**什么都不做**，绝不在网络抖动时误杀。
+  `local_check.sh` 看到工作区有 `cancel_request.txt` 会直接跳过 job 报 `CANCELLED`（failed），
+  防止旧 job 被重跑。Agent 收尾流程：看到 failed → 修脚本 → **删掉 `cancel_request.txt`** →
+  开新 round。删文件这步不能忘，否则新 round 也会被跳过。
+* **本地急停（`watch.sh --kill`）**：用户在本机一条命令停任务 + 释放 lock + 推回 cancelled，
+  用于 Agent 不在场时。
+
+Agent 侧叫停的标准动作（一条龙）：
+
+```bash
+printf 'round %s: 叫停原因（哪错了）\n%s\n' "$ROUND" "$(date '+%F %T')" > results/status/cancel_request.txt
+git add results/status/cancel_request.txt && git commit -qm "cancel: round $ROUND <一句话原因>" && git push
+# 然后等 ≤3 min，读回 failed verdict，修完删文件开新 round
+```
