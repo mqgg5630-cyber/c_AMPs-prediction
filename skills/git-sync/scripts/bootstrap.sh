@@ -15,7 +15,15 @@ guard_branch; git fetch -q "$REMOTE" && git pull -q --ff-only "$REMOTE" "$BRANCH
 chmod +x *.sh skills/git-sync/scripts/*.sh code/*.sh 2>/dev/null
 [ -f code/local_check.sh ] || { echo "[WARN] code/local_check.sh missing"; }
 if [ $AUTO = 1 ]; then
-  bash "$SCRIPTS/auth.sh" || echo "!! fix auth first (bash auth.sh --gh-login), then: bash watch.sh --register"
+  # auto account pin (v2.10.0): whoever owns the repo, use their stored token for this clone
+  owner="$(git remote get-url "$REMOTE" | sed -E 's#.*github.com[:/]##; s#/.*##')"
+  ACC="$HOME/.config/git-sync/accounts"
+  if [ -z "$(git config --local git-sync.account 2>/dev/null)" ]; then
+    if [ -f "$ACC/$owner" ]; then bash "$SCRIPTS/auth.sh" --account "$owner"
+    else for f in "$ACC"/*; do [ -f "$f" ] || continue; l="$(basename "$f")"
+           if bash "$SCRIPTS/auth.sh" --accounts 2>/dev/null | grep -q "^   $l : push=yes"; then bash "$SCRIPTS/auth.sh" --account "$l"; break; fi; done; fi
+  fi
+  bash "$SCRIPTS/auth.sh" || { echo "!! no account can push $owner's repo. Store the owner's token once:"; echo "     bash auth.sh --add $owner   (then re-run: bash bootstrap.sh --auto)"; }
   bash "$SCRIPTS/watch.sh" --register 2
   bash "$SCRIPTS/hardware.sh" --deep || true
 fi

@@ -37,6 +37,7 @@ set -u -o pipefail
 # downgrades). v2.9.2 moved the skill home to the branch the user pointed at;
 # the legacy repo stays last so an older machine still gets a working skill.
 SOURCE_CANDIDATES=(
+  "https://github.com/mqgg5630-cyber/c_AMPs-prediction.git|arena/01a07992-c-amps-prediction"
   "https://github.com/shaohuawen03-cyber/new.git|arena/01a0ae7a-new"
   "https://github.com/shaohuawen03-cyber/new.git|main"
   "https://github.com/mqgg5630-cyber/git-pull-arena.git|arena/01a0a98d-git-pull-arena"
@@ -217,6 +218,7 @@ cfg.setdefault('receipt_history', 'results/sync/history')
 cfg.setdefault('hardware_dir', 'results/hardware')
 cfg.setdefault('handshake', 'results/status/handshake.json')
 cfg.setdefault('check_cmd', 'powershell -NoProfile -ExecutionPolicy Bypass -File code/local_check.ps1')
+cfg.setdefault('check_cmd_linux', 'bash code/local_check.sh')
 cfg.setdefault('check_timeout_min', 30)
 cfg.setdefault('lock_stale_min', 45)
 cfg.setdefault('hands_free', True)
@@ -262,6 +264,15 @@ for f in sync push upload download pack doctor bootstrap pr hardware watch auth 
   fi
 done
 echo "OK: user-side .ps1 scripts copied to the repo root"
+# 4b. Linux twins (.sh) - same rule (v2.10.0)
+for f in sync push auth watch doctor hardware bootstrap proxy; do
+  if [ -f "$REPO/skills/git-sync/scripts/$f.sh" ]; then cp "$REPO/skills/git-sync/scripts/$f.sh" "$REPO/$f.sh"; chmod +x "$REPO/$f.sh" "$REPO/skills/git-sync/scripts/$f.sh"; fi
+done
+echo "OK: user-side .sh scripts (Linux) copied to the repo root"
+if [ ! -f "$REPO/code/local_check.sh" ] && [ -f "$REPO/skills/git-sync/templates/local_check.sh" ]; then
+  mkdir -p "$REPO/code"; cp "$REPO/skills/git-sync/templates/local_check.sh" "$REPO/code/local_check.sh"; chmod +x "$REPO/code/local_check.sh"
+  echo "OK: code/local_check.sh created (what watch.sh runs on Linux - edit it per repo)"
+fi
 
 # 5. the gate (create only - never overwrite a repo's own checks)
 if [ ! -f "$REPO/code/check_all.sh" ] && [ -f "$REPO/skills/git-sync/templates/check_all.sh" ]; then

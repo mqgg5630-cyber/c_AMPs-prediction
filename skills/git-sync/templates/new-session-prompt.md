@@ -1,30 +1,29 @@
-# 新会话：用户一句话，助手自动装技能、打通本机、按需自循环
+# 新会话一句话提示词（v2.10.0）
 
-> 用户**只发一句话**（可带 Arena 链接、可带具体任务）。完整动作清单在 `one-sentence.md`。
-> **不要打开 arena.ai**（登录墙）。映射见仓库根目录 `01a0a821.md`：clone GitHub `shaohuawen03-cyber/new` 分支 `arena/01a0ae7a-new`（技能总部，v2.9.2 起）。
-禁止向用户索要长提示词。账号策略：贴给用户的本机块里已带 `auth.ps1 -Account <仓库主>`。
+复制到任何新的 Arena 对话即可：
 
----
-
-## 用户发的（短的）
-
-```text
-安装 arena/01a0a821-git-pull-arena skills, 与本地打通
+```
+安装https://github.com/mqgg5630-cyber/c_AMPs-prediction的 skills，与本机打通。
+我的机器是linux，克隆目录放/home/w24e/0amp/att-lstm-bert，不要覆盖已有目录
 ```
 
-## 用户发的（带自循环任务，docx/pptx 可换成别的）
+（Windows 机器把最后一行换成 `我的机器是windows，克隆目录放 E:\0github\xxx`。）
 
-```text
-安装https://arena.ai/agent/01a0a821-3f3c-7bbe-bf99-6e6793c45d81的skills。与本地打通
-并实现自循环任务，将这个生成docx和pptx返回到本机，本机并把结果状态push到分支，一直自动循环知道你觉得结果没问题
-```
+## Agent 收到后的固定动作
 
-## 助手自动做的
+1. `git clone --quiet --depth 1 -b arena/01a07992-c-amps-prediction https://github.com/mqgg5630-cyber/c_AMPs-prediction.git /tmp/git-sync-src && bash /tmp/git-sync-src/skills/git-sync/scripts/agent-install.sh`
+2. `bash skills/git-sync/scripts/agent-sync.sh "feat: install git-sync"`
+3. `bash skills/git-sync/scripts/agent-handoff.sh --linux <用户给的目录>`（Windows 不加 `--linux`），把输出块作为**第一条回复**给用户
+4. `bash skills/git-sync/scripts/agent-check.sh --request "round 1: 本机打通自检"`
+5. `bash skills/git-sync/scripts/agent-handsfree.sh --timeout auto` —— 本机值守自动 sync → 跑 `code/local_check.sh` → 推回 passed/failed；passed 即 `--accept` 闭环
+6. 之后每次 Agent 完成工作：`agent-sync.sh "msg"` 推给本机（值守 `auto_pull` 自动拉），需要真机验证/执行就 `--request`（可先把命令写进 `code/job.sh`），结果自动 push 回来
 
-1. 从 `shaohuawen03-cyber/new` 分支 `arena/01a0ae7a-new` 把 `skills/git-sync` 装进**本仓库当前工作分支**（安装器会自己挑最新候选）。
-2. `agent-sync.sh` 提交推送。
-3. 回复一段**已经填好**的本机 PowerShell（新文件夹；禁止覆盖 `git-pull-arena` / `git-pull-arena-v268` / `git-pull-arena-s2`）。
-4. 若有具体任务 / 「自循环」：立刻做任务、写 `success_criteria.json`、`agent-handsfree.sh --timeout auto` 直到 accept。值守一回传就停，不空等 600 秒。
-5. **不要**让用户先去旧克隆 `.\sync.ps1`。新会话走自己的分支；本机只需对该新文件夹 `bootstrap -Auto` 一次。
+## 用户侧只需一次的事
 
-命令与回复模板见 [`one-sentence.md`](one-sentence.md)，任务环见 [`task-loop.md`](task-loop.md)。
+- WSL2：`bash proxy.sh --install`（宿主机 IP 漂移自动跟随；端口默认 10808 socks5，可 `PORT=7890 SCHEME=http`）
+- 令牌：`bash auth.sh --add <仓库主账号>`（每台机器每个账号一次；`bootstrap.sh --auto` 之后自动按仓库主钉账号）
+- cron：`sudo service cron start`；WSL 自启在 `/etc/wsl.conf` 加 `[boot]\ncommand=service cron start`
+
+## 铁律
+
+同一分支只准一侧值守 live（Windows / WSL / 第二台机三选一 `--register`，其他 `--unregister`）。

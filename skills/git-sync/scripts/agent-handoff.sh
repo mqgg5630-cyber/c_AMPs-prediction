@@ -18,6 +18,27 @@
 # Exit: 0 printed, 1 unusable repo/config, 3 config branch != HEAD (fix first).
 
 set -u -o pipefail
+# v2.10.0: --linux [folder]  prints the Linux/WSL paste block instead of PowerShell
+if [ "${1:-}" = "--linux" ]; then
+  R="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"; cd "$R"
+  URL="$(git remote get-url origin)"; BR="$(python3 -c "import json;print(json.load(open('skills/git-sync/sync.config.json',encoding='utf-8-sig'))['branch'])")"
+  HEADBR="$(git rev-parse --abbrev-ref HEAD)"; [ "$BR" = "$HEADBR" ] || { echo "[REFUSED] config branch $BR != HEAD $HEADBR" >&2; exit 3; }
+  DEST="${2:-$(basename "$URL" .git)}"; OWNER="$(echo "$URL" | sed -E 's#.*github.com[:/]##; s#/.*##')"
+  cat <<EOB
+\`\`\`bash
+# Linux / WSL - paste as one block. Existing folder is NOT overwritten (clone skips if it exists).
+mkdir -p "\$(dirname "$DEST")"
+[ -d "$DEST/.git" ] || git clone -b $BR $URL "$DEST"
+cd "$DEST"
+grep -qi microsoft /proc/version 2>/dev/null && bash proxy.sh --install && source ~/.bashrc   # WSL2 only
+sudo service cron start 2>/dev/null
+ls ~/.config/git-sync/accounts/$OWNER >/dev/null 2>&1 || bash auth.sh --add $OWNER    # once per machine: paste $OWNER's token
+bash bootstrap.sh --auto      # identity + branch + auto account pin + cron watcher + hardware report
+bash doctor.sh                # expect: OK branch / ahead 0 behind 0 / watcher registered / silent push works
+\`\`\`
+EOB
+  exit 0
+fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$REPO_ROOT"
 
